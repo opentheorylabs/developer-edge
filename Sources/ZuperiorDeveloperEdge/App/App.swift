@@ -5,8 +5,15 @@ import MenuBarExtraAccess
 @main
 struct ZuperiorDeveloperEdgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var store = Store()
+    @StateObject private var store: Store
     @State private var isPanelPresented = false
+
+    init() {
+        // Load the team/user config before the Store reads any config-derived
+        // defaults (workspace root, enabled quick links/slack channels).
+        AppConfig.bootstrap(workspaceRoot: UserDefaults.standard.string(forKey: "workspaceRoot"))
+        _store = StateObject(wrappedValue: Store())
+    }
 
     var body: some Scene {
         MenuBarExtra {

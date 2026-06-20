@@ -214,15 +214,18 @@ struct PanelView: View {
                 .id(footerMsg)
                 .transition(.movingParts.blur.combined(with: .opacity))
             Spacer(minLength: 8)
-            Button(action: { NSWorkspace.shared.open(URL(string: "https://github.com/zuperior-platform/zuperior-developer-edge/issues/new")!) }) {
-                Text("Request a feature")
-                    .font(.system(size: Theme.FontSize.caption, weight: .medium))
-                    .foregroundColor(Theme.textMuted)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.07)))
-                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+            if let feedback = AppConfig.current.branding.feedbackURL,
+               let url = URL(string: feedback) {
+                Button(action: { NSWorkspace.shared.open(url) }) {
+                    Text("Request a feature")
+                        .font(.system(size: Theme.FontSize.caption, weight: .medium))
+                        .foregroundColor(Theme.textMuted)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.07)))
+                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 14).padding(.vertical, 9)
     }

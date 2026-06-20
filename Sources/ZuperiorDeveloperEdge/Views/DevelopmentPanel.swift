@@ -362,7 +362,7 @@ struct DevelopmentPanel: View {
 
     private var setupSubtitle: String {
         if store.setupRunning { return "Cloning repos…" }
-        if store.aiInstructionsUpdating { return "Pulling td-ai-instructions" }
+        if store.aiInstructionsUpdating { return "Pulling \(AppConfig.current.workspace.aiInstructionsRepo ?? "AI instructions")" }
         if !store.newReposAvailable.isEmpty {
             let n = store.newReposAvailable.count
             return "\(n) new \(n == 1 ? "repo" : "repos") · access granted"

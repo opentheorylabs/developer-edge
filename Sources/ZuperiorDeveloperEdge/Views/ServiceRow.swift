@@ -11,7 +11,7 @@ struct ServiceTableRow: View {
     var mainURL: String? { urlStr }
     // Prefer the latest run we have a status for; fall back to the full actions list.
     var pipelineURL: String {
-        store.pipelineRunURLs[svc.repo] ?? "https://github.com/zuperior-platform/\(svc.repo)/actions"
+        store.pipelineRunURLs[svc.repo] ?? "https://github.com/\(AppConfig.current.github.org)/\(svc.repo)/actions"
     }
     var reach: ReachStatus { urlStr.map { store.status(for: $0) } ?? .unknown }
     var pipeline: PipelineStatus { store.pipeline(for: svc.repo) }

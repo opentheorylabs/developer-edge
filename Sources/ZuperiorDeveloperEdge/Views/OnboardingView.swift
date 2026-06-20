@@ -69,12 +69,12 @@ struct OnboardingView: View {
     private var githubStep: some View {
         VStack(alignment: .leading, spacing: 12) {
             stepHeader("🔑", "Connect GitHub", "Powers the PRs tab and lists the repos to clone.")
-            link("Create a token (classic): repo + read:org", "https://github.com/settings/tokens/new?scopes=repo,read:org&description=Zuperior%20Developer%20Edge")
+            link("Create a token (classic): repo + read:org", "https://github.com/settings/tokens/new?scopes=repo,read:org&description=Developer%20Edge")
             tokenField("Paste your GitHub token (ghp_…)", text: $githubDraft, accent: Theme.purple)
             if !store.githubToken.isEmpty {
                 statusLine("GitHub token saved", ok: true)
             }
-            note("Important: if the token is fine-grained or your org uses SSO, authorize it for zuperior-platform.")
+            note("Important: if the token is fine-grained or your org uses SSO, authorize it for \(AppConfig.current.github.org).")
         }
     }
 

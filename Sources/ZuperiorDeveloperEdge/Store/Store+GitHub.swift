@@ -6,9 +6,10 @@ extension Store {
         prsFetching = true
 
         let token = githubToken
+        let orgScope = AppConfig.current.github.org.isEmpty ? "" : "+org%3A\(AppConfig.current.github.org)"
         let queries = [
-            "authored": "is%3Apr+is%3Aopen+org%3Azuperior-platform+author%3A%40me",
-            "review":   "is%3Apr+is%3Aopen+org%3Azuperior-platform+review-requested%3A%40me",
+            "authored": "is%3Apr+is%3Aopen\(orgScope)+author%3A%40me",
+            "review":   "is%3Apr+is%3Aopen\(orgScope)+review-requested%3A%40me",
         ]
         let group = DispatchGroup()
         var authored: [PRItem] = []

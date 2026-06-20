@@ -9,9 +9,7 @@ extension Store {
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
-            let cmds = clusters.map { c in
-                "/opt/homebrew/bin/gcloud container clusters get-credentials \(c.name) --project \(c.project) --region \(c.region) --internal-ip"
-            }.joined(separator: " && ")
+            let cmds = clusters.map(\.credentialCommand).joined(separator: " && ")
 
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/bin/bash")

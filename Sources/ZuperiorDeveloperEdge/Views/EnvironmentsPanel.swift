@@ -107,12 +107,14 @@ struct EnvironmentsPanel: View {
 
     @ViewBuilder
     private func envQuickActions(env: Env) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-            GridButton(data: GridButtonData(
-                icon: "chart.xyaxis.line", color: Theme.orange,
-                title: "Open Grafana", subtitle: "\(env.label) Metrics",
-                url: env.grafanaURL
-            ))
+        if let grafana = env.grafanaURL, !grafana.isEmpty {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                GridButton(data: GridButtonData(
+                    icon: "chart.xyaxis.line", color: Theme.orange,
+                    title: "Open Grafana", subtitle: "\(env.label) Metrics",
+                    url: grafana
+                ))
+            }
         }
     }
 

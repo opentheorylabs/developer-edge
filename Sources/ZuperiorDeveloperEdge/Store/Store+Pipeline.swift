@@ -14,7 +14,7 @@ extension Store {
         let lock = NSLock()
 
         for repo in repos {
-            guard let url = URL(string: "https://api.github.com/repos/zuperior-platform/\(repo)/actions/runs?per_page=1&branch=\(branch)") else { continue }
+            guard let url = URL(string: "https://api.github.com/repos/\(AppConfig.current.github.org)/\(repo)/actions/runs?per_page=1&branch=\(branch)") else { continue }
             group.enter()
             var req = URLRequest(url: url)
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

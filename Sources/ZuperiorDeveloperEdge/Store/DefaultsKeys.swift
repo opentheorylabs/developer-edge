@@ -15,11 +15,11 @@ extension Defaults.Keys {
     // MARK: - Quick links / Slack
     static let enabledQuickLinks = Key<Set<String>>(
         "enabledQuickLinks",
-        default: Set(allQuickLinks.filter { $0.mandatory || $0.id == "figma" }.map(\.id))
+        default: Set(allQuickLinks.filter(\.mandatory).map(\.id))
     )
     static let enabledSlackChannels = Key<Set<String>>(
         "enabledSlackChannels",
-        default: ["trading-pr", "trading-core"]
+        default: Set(allSlackChannels.prefix(2).map(\.id))
     )
 
     // MARK: - Localhost

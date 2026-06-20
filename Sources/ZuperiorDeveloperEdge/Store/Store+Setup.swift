@@ -35,28 +35,30 @@ extension Store {
     }
 
     /// Heuristic: does this folder already look like a (possibly messy) workspace?
-    /// A bare folder named "Zuperior" no longer qualifies on name alone · it must
-    /// contain a workspace marker or a td-* repo, otherwise a stray photo album
-    /// at ~/Photos/Zuperior/ would be silently adopted and reorganized.
+    /// It must contain a configured subfolder, the AI-instructions repo, or a repo
+    /// matching the configured prefix · so a stray unrelated folder isn't adopted.
     private func looksLikeWorkspace(_ path: String) -> Bool {
         let fm = FileManager.default
-        if fm.fileExists(atPath: path + "/Frontend")
-            || fm.fileExists(atPath: path + "/Backend")
-            || fm.fileExists(atPath: path + "/td-ai-instructions") { return true }
-        if let entries = try? fm.contentsOfDirectory(atPath: path),
-           entries.contains(where: { $0.hasPrefix("td-") }) { return true }
+        for sub in AppConfig.current.workspace.subfolders where fm.fileExists(atPath: path + "/" + sub) {
+            return true
+        }
+        if let ai = AppConfig.current.workspace.aiInstructionsRepo,
+           fm.fileExists(atPath: path + "/" + ai) { return true }
+        if AppConfig.current.github.hasPrefix,
+           let entries = try? fm.contentsOfDirectory(atPath: path),
+           entries.contains(where: { AppConfig.current.github.matches($0) }) { return true }
         return false
     }
 
-    /// Moves any td-* git repos already on disk (flat at root or in the wrong
-    /// subfolder) into the correct subfolder for their prefix.
+    /// Moves any matching git repos already on disk (flat at root or in the wrong
+    /// subfolder) into the correct subfolder per the configured rules.
     private func reorganizeExisting(root: String) {
         let fm = FileManager.default
-        let searchDirs = [root, root + "/Frontend", root + "/Backend", root + "/Mobile", root + "/DevOps"]
+        let searchDirs = [root] + AppConfig.current.workspace.subfolders.map { root + "/" + $0 }
         var moved = 0
         for dir in searchDirs {
             guard let entries = try? fm.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in entries where entry.hasPrefix("td-") {
+            for entry in entries where AppConfig.current.github.subfolder(for: entry) != nil {
                 let current = dir + "/" + entry
                 var isDir: ObjCBool = false
                 guard fm.fileExists(atPath: current, isDirectory: &isDir), isDir.boolValue,
@@ -96,16 +98,17 @@ extension Store {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
 
+            let org = AppConfig.current.github.org
             var status = 0
             let repos = self.fetchOrgRepoNames(token: token, status: &status)
-                .filter { $0.hasPrefix("td-") && !$0.hasSuffix("-archive") }
+                .filter { AppConfig.current.github.matches($0) }
                 .sorted()
             guard !repos.isEmpty else {
                 let msg: String
                 switch status {
                 case 401: msg = "GitHub rejected the token (401). Re-check your PAT in Settings."
-                case 403: msg = "GitHub returned 403. Your token likely needs SSO authorization for the zuperior-platform org (Settings → token → Configure SSO)."
-                case 200: msg = "No td-* repos visible to this token. Make sure it has repo + read:org access to zuperior-platform."
+                case 403: msg = "GitHub returned 403. Your token likely needs SSO authorization for the \(org) org (Settings → token → Configure SSO)."
+                case 200: msg = "No matching repos visible to this token. Make sure it has repo + read:org access to \(org)."
                 default:  msg = "Could not reach GitHub (status \(status)). Check your network and token."
                 }
                 self.appendSetup("\n" + msg + "\n")
@@ -115,7 +118,7 @@ extension Store {
             DispatchQueue.main.async { self.setupTotal = repos.count }
 
             let fm = FileManager.default
-            for sub in ["Frontend", "Backend", "Mobile", "DevOps"] {
+            for sub in AppConfig.current.workspace.subfolders {
                 try? fm.createDirectory(atPath: root + "/" + sub, withIntermediateDirectories: true)
             }
             self.appendSetup("Workspace: \(root)\nFound \(repos.count) repos\n\n")
@@ -134,7 +137,7 @@ extension Store {
                 }
                 self.appendSetup("⬇ \(name)\n")
                 let ok = self.runProcess(
-                    ["git", "clone", "--quiet", "git@github.com:zuperior-platform/\(name).git", dest]
+                    ["git", "clone", "--quiet", AppConfig.current.github.cloneURL(repo: name), dest]
                 )
                 self.appendSetup(ok ? "  ✓ cloned\n" : "  ✗ clone failed\n")
                 if !ok { cloneFailures += 1 }
@@ -144,18 +147,19 @@ extension Store {
                 self.appendSetup("\n⚠ \(cloneFailures) clone\(cloneFailures == 1 ? "" : "s") failed. These use SSH (git@github.com) · make sure your SSH key is added to GitHub and authorized for the org. Test with: ssh -T git@github.com\n")
             }
 
-            // Link AGENTS.md / CLAUDE.md for every cloned repo
-            let linkScript = root + "/td-ai-instructions/scripts/link.sh"
-            if fm.fileExists(atPath: linkScript) {
+            // Link AI-instruction files for every cloned repo (optional feature).
+            let aiRepo = AppConfig.current.workspace.aiInstructionsRepo
+            let linkScript = aiRepo.map { root + "/" + $0 + "/scripts/link.sh" }
+            if let aiRepo, let linkScript, fm.fileExists(atPath: linkScript) {
                 self.appendSetup("\nLinking AI instructions…\n")
-                for name in repos where name != "td-ai-instructions" {
+                for name in repos where name != aiRepo {
                     let dest = self.destPath(root: root, repo: name)
                     guard fm.fileExists(atPath: dest) else { continue }
                     _ = self.runProcess(["bash", linkScript, name], cwd: dest)
                 }
                 self.appendSetup("Done.\n")
-            } else {
-                self.appendSetup("\n(td-ai-instructions not found · skipped AI linking)\n")
+            } else if aiRepo != nil {
+                self.appendSetup("\n(\(aiRepo!) not found · skipped AI linking)\n")
             }
 
             DispatchQueue.main.async {
@@ -180,7 +184,7 @@ extension Store {
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
             var status = 0
-            let names = self.fetchOrgRepoNames(token: token, status: &status).filter { $0.hasPrefix("td-") && !$0.hasSuffix("-archive") }
+            let names = self.fetchOrgRepoNames(token: token, status: &status).filter { AppConfig.current.github.matches($0) }
             let fm = FileManager.default
             let missing = names.filter { !fm.fileExists(atPath: self.destPath(root: root, repo: $0)) }
             DispatchQueue.main.async { self.newReposAvailable = missing.sorted() }
@@ -189,14 +193,17 @@ extension Store {
 
     // MARK: - AI instructions update
 
-    private var aiInstructionsPath: String { workspaceRoot + "/td-ai-instructions" }
+    /// Path to the configured AI-instructions repo, or nil if the feature is off.
+    private var aiInstructionsPath: String? {
+        AppConfig.current.workspace.aiInstructionsRepo.map { workspaceRoot + "/" + $0 }
+    }
 
-    /// Checks whether the local td-ai-instructions repo is behind its upstream.
+    /// Checks whether the local AI-instructions repo is behind its upstream.
     func checkAIInstructionsUpdate() {
-        guard FileManager.default.fileExists(atPath: aiInstructionsPath + "/.git") else { return }
+        guard let aiInstructionsPath,
+              FileManager.default.fileExists(atPath: aiInstructionsPath + "/.git") else { return }
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            guard let self else { return }
-            let dir = self.aiInstructionsPath
+            guard let self, let dir = self.aiInstructionsPath else { return }
             _ = self.runProcess(["git", "-C", dir, "fetch", "--quiet"])
             let local  = self.gitOutput(["git", "-C", dir, "rev-parse", "@"])
             let remote = self.gitOutput(["git", "-C", dir, "rev-parse", "@{u}"])
@@ -205,24 +212,24 @@ extension Store {
         }
     }
 
-    /// Pulls td-ai-instructions and re-links AGENTS.md across all known repos.
+    /// Pulls the AI-instructions repo and re-links instruction files across repos.
     func updateAIInstructions() {
-        guard !aiInstructionsUpdating else { return }
+        guard !aiInstructionsUpdating, let dir = aiInstructionsPath,
+              let aiRepo = AppConfig.current.workspace.aiInstructionsRepo else { return }
         aiInstructionsUpdating = true
         setupOutput = ""
         setupExitCode = nil
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
-            let dir = self.aiInstructionsPath
-            self.appendSetup("Updating td-ai-instructions…\n")
+            self.appendSetup("Updating \(aiRepo)…\n")
             let pulled = self.runProcess(["git", "-C", dir, "pull", "--quiet"])
             self.appendSetup(pulled ? "  ✓ pulled\n" : "  ✗ pull failed\n")
 
             let linkScript = dir + "/scripts/link.sh"
             if FileManager.default.fileExists(atPath: linkScript) {
                 self.appendSetup("\nRe-linking AI instructions…\n")
-                for repo in self.repos where repo.name != "td-ai-instructions" {
+                for repo in self.repos where repo.name != aiRepo {
                     _ = self.runProcess(["bash", linkScript, repo.name], cwd: repo.path)
                 }
                 self.appendSetup("Done.\n")
@@ -253,10 +260,9 @@ extension Store {
     }
 
     private func destPath(root: String, repo: String) -> String {
-        if repo.hasPrefix("td-frontend-") { return root + "/Frontend/" + repo }
-        if repo.hasPrefix("td-backend-")  { return root + "/Backend/" + repo }
-        if repo.hasPrefix("td-mobile-")   { return root + "/Mobile/" + repo }
-        if repo.hasPrefix("td-devops")    { return root + "/DevOps/" + repo }  // td-devops and td-devops-*
+        if let sub = AppConfig.current.github.subfolder(for: repo) {
+            return root + "/" + sub + "/" + repo
+        }
         return root + "/" + repo
     }
 
@@ -270,7 +276,7 @@ extension Store {
         var names: [String] = []
         var firstStatus = 0
         var isFirst = true
-        var next: URL? = URL(string: "https://api.github.com/orgs/zuperior-platform/repos?per_page=100&type=all&sort=full_name")
+        var next: URL? = URL(string: "https://api.github.com/orgs/\(AppConfig.current.github.org)/repos?per_page=100&type=all&sort=full_name")
         while let url = next {
             next = nil
             let sem = DispatchSemaphore(value: 0)

@@ -1,8 +1,10 @@
 import SwiftUI
 import Pow
 
-private let jiraBase  = "https://zuperior-platform.atlassian.net"
-private let jiraBoard = "\(jiraBase)/jira/software/projects/ZT/boards/34"
+private var jiraBase: String {
+    AppConfig.current.jira.map { "https://\($0.host)" } ?? ""
+}
+private var jiraBoard: String { "\(jiraBase)/jira/your-work" }
 
 struct QuickActionsPanel: View {
     @ObservedObject var store: Store
@@ -227,11 +229,7 @@ struct QuickActionsPanel: View {
     }
 
     private var assignedToMeURL: String {
-        guard !store.jiraAccountId.isEmpty else {
-            return "\(jiraBase)/issues/?jql=project%3DZT%20AND%20assignee%3DcurrentUser()%20AND%20statusCategory%20!%3DDone%20ORDER%20BY%20updated%20DESC"
-        }
-        let enc = store.jiraAccountId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? store.jiraAccountId
-        return "\(jiraBoard)?assignee=\(enc)"
+        "\(jiraBase)/issues/?jql=assignee%3DcurrentUser()%20AND%20statusCategory%20!%3DDone%20ORDER%20BY%20updated%20DESC"
     }
 
     @ViewBuilder

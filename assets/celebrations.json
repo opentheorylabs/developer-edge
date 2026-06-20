@@ -1,7 +1,4 @@
 {
-  "_readme": "Birthdays and work anniversaries per teammate. Matched against the Jira display name. birthday is MM-DD; joined is YYYY-MM-DD (used to compute anniversary years). Either field may be null.",
-  "people": [
-    { "name": "Sahil Kapoor", "birthday": "09-11", "joined": null },
-    { "name": "", "birthday": "MM-DD", "joined": "YYYY-MM-DD" }
-  ]
+  "_readme": "Optional. Birthdays and work anniversaries per teammate, matched against the Jira display name. birthday is MM-DD; joined is YYYY-MM-DD (used to compute anniversary years). Either field may be null. Enable via the 'celebrations' section in developer-edge.json. Ships empty; add your team here, or point celebrations.rosterPath at a private file kept out of version control.",
+  "people": []
 }

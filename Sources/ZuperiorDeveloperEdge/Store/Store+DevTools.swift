@@ -104,12 +104,11 @@ extension Store {
         guard !lensRunning else { return }
         lensRunning = true
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let cmds = clusters.map { c in
-                "/opt/homebrew/bin/gcloud container clusters get-credentials \(c.name) --project \(c.project) --region \(c.region) --internal-ip"
-            }.joined(separator: " && ")
+            let cmds = clusters.map(\.credentialCommand).joined(separator: " && ")
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/bin/bash")
             proc.arguments = ["-c", cmds]
+            proc.environment = ProcessEnv.base()
             proc.standardOutput = Pipe()
             proc.standardError = Pipe()
             try? proc.run()
@@ -145,10 +144,10 @@ extension Store {
     func scanRepos() {
         let fm = FileManager.default
         let root = workspaceRoot
-        let aiRoot = root + "/td-ai-instructions"
+        let aiRepo = AppConfig.current.workspace.aiInstructionsRepo
+        let aiRoot = aiRepo.map { root + "/" + $0 }
         var found: [RepoInfo] = []
-        let subgroups = ["Frontend", "Backend", "Mobile", "DevOps", "Testing"]
-        let searchRoots = [root] + subgroups.map { root + "/" + $0 }
+        let searchRoots = [root] + AppConfig.current.workspace.subfolders.map { root + "/" + $0 }
         for searchRoot in searchRoots {
             guard let entries = try? fm.contentsOfDirectory(atPath: searchRoot) else { continue }
             for entry in entries.sorted() {
@@ -156,9 +155,10 @@ extension Store {
                 var isDir: ObjCBool = false
                 guard fm.fileExists(atPath: full, isDirectory: &isDir), isDir.boolValue else { continue }
                 guard fm.fileExists(atPath: full + "/.git") else { continue }
-                guard entry != "td-ai-instructions", entry != "zuperior-devx" else { continue }
+                guard entry != aiRepo else { continue }
                 let hasLink = fm.fileExists(atPath: full + "/CLAUDE.md")
-                let hasInstructions = fm.fileExists(atPath: aiRoot + "/repos/\(entry).md")
+                    || fm.fileExists(atPath: full + "/AGENTS.md")
+                let hasInstructions = aiRoot.map { fm.fileExists(atPath: $0 + "/repos/\(entry).md") } ?? false
                 found.append(RepoInfo(name: entry, path: full, hasLink: hasLink, hasInstructions: hasInstructions))
             }
         }
@@ -174,7 +174,8 @@ extension Store {
 
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self else { return }
-            let linkScript = self.workspaceRoot + "/td-ai-instructions/scripts/link.sh"
+            let aiRepo = AppConfig.current.workspace.aiInstructionsRepo ?? ""
+            let linkScript = self.workspaceRoot + "/" + aiRepo + "/scripts/link.sh"
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/bin/bash")
             proc.arguments = [linkScript, repo.name]

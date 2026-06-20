@@ -5,29 +5,14 @@ import SwiftUI
 enum Env: String, CaseIterable {
     case dev, staging, prod
 
-    var label: String {
-        switch self {
-        case .dev:     return "Dev"
-        case .staging: return "Staging"
-        case .prod:    return "Prod"
-        }
+    /// Matching environment entry from the loaded config, if any.
+    private var cfg: AppConfig.Environment? {
+        AppConfig.current.environments.first { $0.id == rawValue }
     }
 
-    var branch: String {
-        switch self {
-        case .dev:     return "development"
-        case .staging: return "staging"
-        case .prod:    return "production"
-        }
-    }
-
-    var grafanaURL: String {
-        switch self {
-        case .dev:     return "https://grafana.dev.zuperior.dev"
-        case .staging: return "https://grafana.stg.zuperior.dev"
-        case .prod:    return "https://grafana.zuperior.com"
-        }
-    }
+    var label: String { cfg?.label ?? rawValue.capitalized }
+    var branch: String { cfg?.branch ?? rawValue }
+    var grafanaURL: String? { cfg?.grafanaURL }
 }
 
 enum ServiceKind { case frontend, api }
@@ -41,7 +26,7 @@ enum GraphToolState { case unknown, notInstalled, installed }
 // MARK: - Service
 
 struct ZService: Identifiable {
-    let id = UUID()
+    var id: String { repo }
     let name: String
     let kind: ServiceKind
     let icon: String
@@ -50,85 +35,34 @@ struct ZService: Identifiable {
     var healthPath: String = "/"
 }
 
-let allServices: [ZService] = [
-    // ── Frontends ──────────────────────────────────────────────────────────
-    ZService(name: "Trading Terminal", kind: .frontend, icon: "chart.line.uptrend.xyaxis",
-             repo: "td-frontend-terminal-website", urls: [
-        .dev:     "https://trade.dev.zuperior.dev",
-        .staging: "https://trade.stg.zuperior.dev",
-        .prod:    "https://trade.zuperior.com",
-    ], healthPath: "/api/health"),
-    ZService(name: "Back Office", kind: .frontend, icon: "gauge.with.dots.needle.50percent",
-             repo: "td-frontend-back-office", urls: [
-        .dev:     "https://back-office.dev.zuperior.dev",
-        .staging: "https://back-office.stg.zuperior.dev",
-        .prod:    "https://back-office.zuperior.com",
-    ]),
-    ZService(name: "CRM Dashboard", kind: .frontend, icon: "person.2.fill",
-             repo: "td-frontend-crm-website", urls: [
-        .dev:     "https://dashboard.dev.zuperior.dev",
-        .staging: "https://dashboard.stg.zuperior.dev",
-        .prod:    "https://dashboard.zuperior.com",
-    ], healthPath: "/api/health"),
-    ZService(name: "IB Portal", kind: .frontend, icon: "building.2.fill",
-             repo: "td-frontend-ib-website", urls: [
-        .dev:     "https://partner.dev.zuperior.dev",
-        .staging: "https://partner.stg.zuperior.dev",
-        .prod:    "https://partner.zuperior.com",
-    ], healthPath: "/api/health"),
-    ZService(name: "Demo Terminal", kind: .frontend, icon: "play.rectangle.fill",
-             repo: "td-frontend-demo-terminal", urls: [
-        .dev:     "https://demo.dev.zuperior.dev",
-        .staging: "https://demo.stg.zuperior.dev",
-        .prod:    "https://demo.zuperior.com",
-    ], healthPath: "/api/health"),
-    ZService(name: "Landing", kind: .frontend, icon: "globe",
-             repo: "td-frontend-landing-website", urls: [
-        .dev:     "https://dev.zuperior.dev",
-        .staging: "https://stg.zuperior.dev",
-        .prod:    "https://www.zuperior.com",
-    ], healthPath: "/api/health"),
-    // ── APIs ───────────────────────────────────────────────────────────────
-    ZService(name: "Terminal API", kind: .api, icon: "terminal.fill",
-             repo: "td-backend-terminal-service", urls: [
-        .dev:     "https://terminal.api.dev.zuperior.dev",
-        .staging: "https://terminal.api.stg.zuperior.dev",
-        .prod:    "https://terminal.api.zuperior.com",
-    ], healthPath: "/health"),
-    ZService(name: "Back Office API", kind: .api, icon: "server.rack",
-             repo: "td-backend-back-office-service", urls: [
-        .dev:     "https://backoffice.api.dev.zuperior.dev",
-        .staging: "https://back-office.api.stg.zuperior.dev",
-        .prod:    "https://back-office.api.zuperior.com",
-    ], healthPath: "/health"),
-    ZService(name: "CRM API", kind: .api, icon: "person.crop.circle.fill",
-             repo: "td-backend-crm-service", urls: [
-        .dev:     "https://crm.api.dev.zuperior.dev",
-        .staging: "https://crm.api.stg.zuperior.dev",
-        .prod:    "https://crm.api.zuperior.com",
-    ], healthPath: "/health"),
-    ZService(name: "Partner API", kind: .api, icon: "link.circle.fill",
-             repo: "td-backend-ib-service", urls: [
-        .dev:     "https://partner.api.dev.zuperior.dev",
-        .staging: "https://partner.api.stg.zuperior.dev",
-        .prod:    "https://partner.api.zuperior.com",
-    ], healthPath: "/health"),
-]
+/// Services from the loaded config, mapped to the runtime type.
+var allServices: [ZService] {
+    AppConfig.current.services.map { s in
+        let urls = Dictionary(uniqueKeysWithValues:
+            s.urls.compactMap { key, value in Env(rawValue: key).map { ($0, value) } })
+        return ZService(name: s.name,
+                        kind: s.kind == "api" ? .api : .frontend,
+                        icon: s.icon, repo: s.repo,
+                        urls: urls, healthPath: s.healthPath)
+    }
+}
 
 // MARK: - Cluster
 
-struct Cluster {
-    let name: String
-    let project: String
-    let region: String
+struct Cluster: Identifiable {
+    var id: String { name }
+    let name: String          // display label
     let env: String
+    let credentialCommand: String   // shell command to fetch kube credentials
 }
 
-let clusters: [Cluster] = [
-    Cluster(name: "zuperior-cluster",            project: "zuperior-development", region: "europe-west1",  env: "Development"),
-    Cluster(name: "zuperior-cluster-staging",    project: "zuperior-staging",     region: "europe-north2", env: "Staging"),
-    Cluster(name: "zuperior-cluster-production", project: "zuperior-production",  region: "europe-north2", env: "Production"),
-]
+/// Clusters from the loaded config. The credential command is run in a shell,
+/// so gcloud / AWS EKS / raw kubectl / Azure all work.
+var clusters: [Cluster] {
+    AppConfig.current.clusters.map {
+        Cluster(name: $0.label, env: $0.env, credentialCommand: $0.credentialCommand)
+    }
+}
 
 // MARK: - QuickLinkDef
 
@@ -142,20 +76,13 @@ struct QuickLinkDef {
     let mandatory: Bool
 }
 
-let allQuickLinks: [QuickLinkDef] = [
-    QuickLinkDef(id: "drive",      icon: "folder.fill",          color: Color(red: 0.98, green: 0.75, blue: 0.18),
-                 title: "Google Drive",  subtitle: "Project files",
-                 url: "https://drive.google.com/drive/u/0/folders/1unKOylXKGwY7-vbv-NM8EA3_dWLgwth9",
-                 mandatory: true),
-    QuickLinkDef(id: "figma",      icon: "pencil.and.outline",   color: Color(red: 0.65, green: 0.42, blue: 1.0),
-                 title: "Figma",         subtitle: "Design files",
-                 url: "https://www.figma.com/files/team/1621735770510355921/all-projects?fuid=1621735768883088798",
-                 mandatory: false),
-    QuickLinkDef(id: "cloudflare", icon: "shield.lefthalf.filled", color: Color(red: 0.91, green: 0.49, blue: 0.22),
-                 title: "Cloudflare",    subtitle: "DNS & domains",
-                 url: "https://dash.cloudflare.com/6e59ea89cb4708b962030ccffccf6eae/zuperior.com/dns/records",
-                 mandatory: false),
-]
+/// Quick links from the loaded config.
+var allQuickLinks: [QuickLinkDef] {
+    AppConfig.current.quickLinks.map {
+        QuickLinkDef(id: $0.id, icon: $0.icon, color: Color(hex: $0.colorHex),
+                     title: $0.title, subtitle: $0.subtitle, url: $0.url, mandatory: $0.mandatory)
+    }
+}
 
 // MARK: - PRItem
 
@@ -211,20 +138,13 @@ struct SlackChannelDef: Identifiable {
     let subtitle: String
 }
 
-let allSlackChannels: [SlackChannelDef] = [
-    SlackChannelDef(id: "trading-pr",     icon: "arrow.triangle.pull",               color: Color(red: 0.36, green: 0.65, blue: 0.97),
-                    title: "#trading-pr",     subtitle: "Pull requests"),
-    SlackChannelDef(id: "trading-core",   icon: "bubble.left.and.bubble.right.fill", color: Color(red: 0.35, green: 0.73, blue: 0.42),
-                    title: "#trading-core",   subtitle: "Core platform"),
-    SlackChannelDef(id: "trading-qa",     icon: "checkmark.shield.fill",              color: Color(red: 0.36, green: 0.65, blue: 0.97),
-                    title: "#trading-qa",     subtitle: "QA & releases"),
-    SlackChannelDef(id: "trading-devops", icon: "gearshape.2.fill",                  color: Color(red: 0.91, green: 0.49, blue: 0.22),
-                    title: "#trading-devops", subtitle: "Infra & deploys"),
-    SlackChannelDef(id: "trading-dev",    icon: "chevron.left.forwardslash.chevron.right", color: Color(red: 0.65, green: 0.42, blue: 1.0),
-                    title: "#trading-dev",    subtitle: "Dev discussions"),
-    SlackChannelDef(id: "trading-design", icon: "paintbrush.fill",                   color: Color(red: 0.98, green: 0.42, blue: 0.58),
-                    title: "#trading-design", subtitle: "Design & UI"),
-]
+/// Slack channels from the loaded config.
+var allSlackChannels: [SlackChannelDef] {
+    AppConfig.current.slackChannels.map {
+        SlackChannelDef(id: $0.id, icon: $0.icon, color: Color(hex: $0.colorHex),
+                        title: $0.title, subtitle: $0.subtitle)
+    }
+}
 
 // MARK: - TerminalApp
 
@@ -256,4 +176,4 @@ let allTerminals: [TerminalApp] = [
                 appPath: "/Applications/Visual Studio Code.app"),
 ]
 
-let defaultWorkspaceRoot = NSHomeDirectory() + "/Developer/Projects/Zuperior"
+var defaultWorkspaceRoot: String { AppConfig.current.workspace.expandedRoot }

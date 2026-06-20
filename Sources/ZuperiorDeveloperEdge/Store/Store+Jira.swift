@@ -19,9 +19,9 @@ extension Store {
             proc.waitUntilExit()
             let email = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
-            // Only trust it if it's a Zuperior address · the Jira account is @zuperior.com.
-            // A personal git email would just break auth, so leave it blank for the user.
-            guard email.hasSuffix("@zuperior.com") else { return }
+            // Prefill from git config if it looks like an email · the user can
+            // correct it. Leave blank otherwise rather than guess.
+            guard email.contains("@"), email.contains(".") else { return }
             DispatchQueue.main.async {
                 self.jiraEmail = email
                 Defaults[.jiraEmail] = email
@@ -36,7 +36,8 @@ extension Store {
         guard !jiraApiToken.isEmpty, userName.isEmpty || jiraAccountId.isEmpty else { return }
         let credential = jiraEmail.isEmpty ? jiraApiToken : "\(jiraEmail):\(jiraApiToken)"
         guard let credData = credential.data(using: .utf8),
-              let url = URL(string: "https://zuperior-platform.atlassian.net/rest/api/3/myself") else { return }
+              let host = AppConfig.current.jira?.host, !host.isEmpty,
+              let url = URL(string: "https://\(host)/rest/api/3/myself") else { return }
 
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
@@ -70,9 +71,14 @@ extension Store {
         // Use GET, not POST. Atlassian's edge applies an XSRF check to state-changing
         // methods (POST/PUT) on this host that fires non-deterministically for non-curl
         // clients and is not reliably defeated by X-Atlassian-Token. GET is never XSRF-checked.
-        var comps = URLComponents(string: "https://zuperior-platform.atlassian.net/rest/api/3/search/jql")!
+        guard let host = AppConfig.current.jira?.host, !host.isEmpty,
+              var comps = URLComponents(string: "https://\(host)/rest/api/3/search/jql") else {
+            jiraFetching = false; return
+        }
+        let jql = AppConfig.current.jira?.jql
+            ?? "assignee = currentUser() AND sprint in openSprints() ORDER BY status ASC"
         comps.queryItems = [
-            URLQueryItem(name: "jql", value: "project = ZT AND assignee = currentUser() AND sprint in openSprints() ORDER BY status ASC"),
+            URLQueryItem(name: "jql", value: jql),
             URLQueryItem(name: "maxResults", value: "100"),
             URLQueryItem(name: "fields", value: "summary,status,assignee,priority,issuetype"),
         ]

@@ -78,6 +78,24 @@ struct AppConfig: Codable {
             case .https: return "https://github.com/\(org)/\(repo).git"
             }
         }
+
+        /// True if a repo passes the configured prefix + exclude-suffix filter.
+        func matches(_ repo: String) -> Bool {
+            if let p = repoPrefix, !p.isEmpty, !repo.hasPrefix(p) { return false }
+            if let s = excludeSuffix, !s.isEmpty, repo.hasSuffix(s) { return false }
+            return true
+        }
+
+        /// True when a non-empty repo prefix is configured (so prefix-based
+        /// heuristics like workspace detection are meaningful).
+        var hasPrefix: Bool { (repoPrefix?.isEmpty == false) }
+
+        /// Subfolder a repo belongs in, by longest matching rule key. nil = flat.
+        func subfolder(for repo: String) -> String? {
+            subfolderRules
+                .sorted { $0.key.count > $1.key.count }
+                .first { repo.hasPrefix($0.key) }?.value
+        }
     }
 
     struct Jira: Codable {

@@ -23,6 +23,7 @@ chmod +x "$APP/Contents/Resources/git_fetch_all.sh"
 cp scripts/update.sh "$APP/Contents/Resources/update.sh"
 chmod +x "$APP/Contents/Resources/update.sh"
 cp assets/celebrations.json "$APP/Contents/Resources/celebrations.json"
+cp developer-edge.example.json "$APP/Contents/Resources/developer-edge.example.json"
 [ -f assets/mascot.png ] && cp assets/mascot.png "$APP/Contents/Resources/mascot.png" || true
 xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true
 

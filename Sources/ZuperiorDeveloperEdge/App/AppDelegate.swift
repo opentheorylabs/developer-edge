@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var rightClickMonitor: Any?
 
     func applicationDidFinishLaunching(_ note: Notification) {
+        // Config is bootstrapped in the App's init (before the Store is built).
         // LSUIElement is set in Info.plist for the packaged app; enforce here too
         // so the SwiftUI lifecycle never shows a Dock icon.
         NSApplication.shared.setActivationPolicy(.accessory)
@@ -46,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showQuitMenu() {
         guard let item = statusItem else { return }
         let menu = NSMenu()
-        menu.addItem(withTitle: "Quit Zuperior Edge",
+        menu.addItem(withTitle: "Quit \(AppConfig.current.branding.appName)",
                      action: #selector(NSApplication.terminate(_:)),
                      keyEquivalent: "q")
         item.menu = menu

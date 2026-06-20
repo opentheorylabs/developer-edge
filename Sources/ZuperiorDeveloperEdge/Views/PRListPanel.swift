@@ -28,8 +28,8 @@ struct PRListPanel: View {
                     url: "https://github.com/pulls?q=is%3Apr+is%3Aopen+review-requested%3A%40me"))
                 GridButton(data: GridButtonData(
                     icon: "building.columns", color: Theme.blue,
-                    title: "Org Repos", subtitle: "zuperior-platform",
-                    url: "https://github.com/orgs/zuperior-platform/repositories"))
+                    title: "Org Repos", subtitle: AppConfig.current.github.org,
+                    url: "https://github.com/orgs/\(AppConfig.current.github.org)/repositories"))
             }
         }
         .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 4)
@@ -195,10 +195,14 @@ private struct PRRow: View {
     }
 
     private var shortRepo: String {
-        pr.repo
-            .replacingOccurrences(of: "td-frontend-", with: "fe/")
-            .replacingOccurrences(of: "td-backend-", with: "be/")
-            .replacingOccurrences(of: "td-mobile-", with: "mobile/")
+        var s = pr.repo
+        if let prefix = AppConfig.current.github.repoPrefix, !prefix.isEmpty {
+            s = s.hasPrefix(prefix) ? String(s.dropFirst(prefix.count)) : s
+        }
+        return s
+            .replacingOccurrences(of: "frontend-", with: "fe/")
+            .replacingOccurrences(of: "backend-", with: "be/")
+            .replacingOccurrences(of: "mobile-", with: "mobile/")
             .replacingOccurrences(of: "-website", with: "")
             .replacingOccurrences(of: "-service", with: "")
     }

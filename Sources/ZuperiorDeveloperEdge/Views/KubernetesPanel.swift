@@ -83,17 +83,11 @@ struct KubernetesPanel: View {
                 Text(c.name)
                     .font(.system(size: Theme.FontSize.title, weight: .medium))
                     .foregroundColor(Theme.textPrimary)
-                Text("\(c.env) · \(c.region)")
+                Text(c.env)
                     .font(.system(size: Theme.FontSize.caption))
                     .foregroundColor(Theme.textMuted)
             }
             Spacer()
-
-            Text(c.project)
-                .font(.system(size: Theme.FontSize.tiny, weight: .medium))
-                .foregroundColor(Theme.textMuted)
-                .padding(.horizontal, 6).padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 5).fill(Theme.badge))
         }
         .frame(height: 50)
         .padding(.horizontal, 14)
