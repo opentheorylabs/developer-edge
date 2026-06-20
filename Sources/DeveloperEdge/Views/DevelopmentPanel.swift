@@ -190,9 +190,9 @@ struct DevelopmentPanel: View {
     @ViewBuilder
     private var localhostSection: some View {
         VStack(spacing: 0) {
-            ForEach(Array(allServices.enumerated()), id: \.element.id) { i, svc in
+            ForEach(Array(store.services.enumerated()), id: \.element.id) { i, svc in
                 localhostRow(svc)
-                if i < allServices.count - 1 {
+                if i < store.services.count - 1 {
                     Rectangle().fill(Theme.divider).frame(height: 1).padding(.horizontal, 14)
                 }
             }

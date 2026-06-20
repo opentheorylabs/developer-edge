@@ -179,9 +179,37 @@ extension Store {
         }
     }
 
+    // MARK: - Service auto-discovery
+
+    /// When the config defines no services, infer them from the org's repos so the
+    /// Environments / Development panels aren't empty. Inferred services have no
+    /// per-env URLs (health checks stay "unknown"), but pipeline status and the
+    /// localhost port mapping still work.
+    func discoverServicesIfNeeded() {
+        guard allServices.isEmpty, !githubToken.isEmpty, discoveredServices.isEmpty else { return }
+        let token = githubToken
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self else { return }
+            var status = 0
+            let names = self.fetchOrgRepoNames(token: token, status: &status)
+                .filter { AppConfig.current.github.matches($0) }
+                .sorted()
+            let frontendHints = ["frontend", "web", "website", "dashboard", "portal", "-ui", "app"]
+            let svcs = names.map { name -> ZService in
+                let lower = name.lowercased()
+                let isFrontend = frontendHints.contains { lower.contains($0) }
+                return ZService(name: name,
+                                kind: isFrontend ? .frontend : .api,
+                                icon: isFrontend ? "globe" : "server.rack",
+                                repo: name, urls: [:], healthPath: "/")
+            }
+            DispatchQueue.main.async { self.discoveredServices = svcs }
+        }
+    }
+
     // MARK: - New repo access
 
-    /// Compares the org's td-* repos against what's cloned locally; surfaces any
+    /// Compares the org's matching repos against what's cloned locally; surfaces any
     /// the user now has access to but hasn't downloaded yet.
     func checkForNewRepos() {
         guard !githubToken.isEmpty, isWorkspaceSetUp, !setupRunning else { return }

@@ -4,7 +4,7 @@ import Defaults
 extension Store {
     func checkLocalhostHealth() {
         guard !localhostChecking else { return }
-        let configured = allServices.compactMap { svc -> (String, String)? in
+        let configured = services.compactMap { svc -> (String, String)? in
             guard let port = localhostPorts[svc.repo] else { return nil }
             let base = "http://localhost:\(port)"
             return (base, base + svc.healthPath)

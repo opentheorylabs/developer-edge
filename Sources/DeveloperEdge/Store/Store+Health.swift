@@ -4,9 +4,10 @@ extension Store {
     func checkAll() {
         guard !checking else { return }
         checking = true
+        discoverServicesIfNeeded()
 
         var checks: [(displayURL: String, checkURL: String)] = []
-        for svc in allServices {
+        for svc in services {
             for (_, urlStr) in svc.urls {
                 let checkURL = urlStr.hasSuffix("/") ? urlStr + svc.healthPath.dropFirst() : urlStr + svc.healthPath
                 checks.append((displayURL: urlStr, checkURL: checkURL))

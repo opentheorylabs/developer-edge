@@ -7,7 +7,7 @@ extension Store {
 
         let branch = env.branch
         let token = githubToken
-        let repos = allServices.map(\.repo)
+        let repos = services.map(\.repo)
         let group = DispatchGroup()
         var result: [String: PipelineStatus] = [:]
         var runURLs: [String: String] = [:]

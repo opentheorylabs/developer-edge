@@ -4,8 +4,8 @@ struct EnvironmentsPanel: View {
     @ObservedObject var store: Store
     @State private var activeEnv: Env = .dev
 
-    private var frontends: [ZService] { allServices.filter { $0.kind == .frontend } }
-    private var apis: [ZService]      { allServices.filter { $0.kind == .api } }
+    private var frontends: [ZService] { store.services.filter { $0.kind == .frontend } }
+    private var apis: [ZService]      { store.services.filter { $0.kind == .api } }
 
     private func envColor(_ env: Env) -> Color {
         switch env {

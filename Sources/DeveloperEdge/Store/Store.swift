@@ -59,6 +59,15 @@ final class Store: ObservableObject {
     @Published var localListeners: [LocalListener] = []
     @Published var scanningListeners = false
 
+    // MARK: - Services
+    /// Services inferred from the GitHub org when the config defines none.
+    @Published var discoveredServices: [ZService] = []
+    /// Config services if present, otherwise auto-discovered ones.
+    var services: [ZService] {
+        let configured = allServices
+        return configured.isEmpty ? discoveredServices : configured
+    }
+
     // MARK: - GitHub PRs
     @Published var myPRs: [PRItem] = []
     @Published var reviewRequests: [PRItem] = []
