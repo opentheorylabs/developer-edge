@@ -1,0 +1,87 @@
+{
+  "_comment": "Copy to <workspaceRoot>/developer-edge.json (team-committed) or ~/.config/developer-edge/config.json (per-user). Secrets (GitHub/Jira tokens) are NOT stored here — set them in the app. Every section except 'branding' and 'github' is optional; omitted sections hide their feature.",
+
+  "branding": {
+    "appName": "Developer Edge",
+    "accentColorHex": "#76B900",
+    "showBetaBadge": false,
+    "feedbackURL": "https://github.com/your-org/developer-edge/issues/new"
+  },
+
+  "github": {
+    "org": "your-org",
+    "repoPrefix": "",
+    "excludeSuffix": "-archive",
+    "cloneScheme": "ssh",
+    "subfolderRules": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "mobile": "Mobile",
+      "devops": "DevOps"
+    }
+  },
+
+  "jira": {
+    "host": "your-org.atlassian.net"
+  },
+
+  "workspace": {
+    "defaultRoot": "~/Developer/Projects/YourOrg",
+    "subfolders": ["Frontend", "Backend", "Mobile", "DevOps"],
+    "aiInstructionsRepo": null
+  },
+
+  "environments": [
+    { "id": "dev",     "label": "Dev",     "branch": "development", "grafanaURL": "https://grafana.dev.example.com" },
+    { "id": "staging", "label": "Staging", "branch": "staging",     "grafanaURL": "https://grafana.stg.example.com" },
+    { "id": "prod",    "label": "Prod",    "branch": "production",   "grafanaURL": "https://grafana.example.com" }
+  ],
+
+  "services": [
+    {
+      "name": "Web App", "kind": "frontend", "icon": "globe", "repo": "web-app",
+      "healthPath": "/api/health",
+      "urls": {
+        "dev":     "https://app.dev.example.com",
+        "staging": "https://app.stg.example.com",
+        "prod":    "https://app.example.com"
+      }
+    },
+    {
+      "name": "API", "kind": "api", "icon": "server.rack", "repo": "api-service",
+      "healthPath": "/health",
+      "urls": {
+        "dev":     "https://api.dev.example.com",
+        "staging": "https://api.stg.example.com",
+        "prod":    "https://api.example.com"
+      }
+    }
+  ],
+
+  "clusters": [
+    {
+      "label": "dev-cluster", "env": "Development",
+      "credentialCommand": "gcloud container clusters get-credentials my-cluster --project my-dev --region europe-west1"
+    },
+    {
+      "label": "eks-prod", "env": "Production",
+      "credentialCommand": "aws eks update-kubeconfig --name prod --region us-east-1"
+    }
+  ],
+
+  "quickLinks": [
+    { "id": "drive",  "icon": "folder.fill",        "colorHex": "#FBBF2E", "title": "Google Drive", "subtitle": "Project files", "url": "https://drive.google.com/", "mandatory": true },
+    { "id": "figma",  "icon": "pencil.and.outline", "colorHex": "#A66BFF", "title": "Figma",        "subtitle": "Design files",  "url": "https://www.figma.com/", "mandatory": false }
+  ],
+
+  "slackChannels": [
+    { "id": "eng-pr",   "icon": "arrow.triangle.pull",               "colorHex": "#5CA6F7", "title": "#eng-pr",   "subtitle": "Pull requests" },
+    { "id": "eng-core", "icon": "bubble.left.and.bubble.right.fill", "colorHex": "#59BA6B", "title": "#eng-core", "subtitle": "Core platform" }
+  ],
+
+  "celebrations": {
+    "enabled": false,
+    "locale": "en_US",
+    "rosterPath": null
+  }
+}
