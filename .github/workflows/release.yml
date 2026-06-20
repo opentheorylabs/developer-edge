@@ -1,0 +1,64 @@
+name: Release
+
+# Builds, signs, notarizes, and publishes a DMG when a vX.Y.Z tag is pushed.
+#
+# Configure these repository secrets first:
+#   DEV_ID                Developer ID Application identity string
+#   DEVID_CERT_P12_BASE64 base64 of your exported Developer ID .p12
+#   DEVID_CERT_PASSWORD   password for the .p12
+#   NOTARY_APPLE_ID       Apple ID email
+#   NOTARY_TEAM_ID        Apple Developer team id
+#   NOTARY_PASSWORD       app-specific password for notarytool
+#
+# Without these the workflow still builds an unsigned (ad-hoc) DMG.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Import signing certificate
+        if: ${{ secrets.DEVID_CERT_P12_BASE64 != '' }}
+        env:
+          P12: ${{ secrets.DEVID_CERT_P12_BASE64 }}
+          P12_PW: ${{ secrets.DEVID_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN=build.keychain
+          security create-keychain -p actions "$KEYCHAIN"
+          security set-keychain-settings "$KEYCHAIN"
+          security unlock-keychain -p actions "$KEYCHAIN"
+          echo "$P12" | base64 --decode > cert.p12
+          security import cert.p12 -k "$KEYCHAIN" -P "$P12_PW" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions "$KEYCHAIN"
+
+      - name: Build + notarize DMG
+        if: ${{ secrets.DEV_ID != '' }}
+        env:
+          DEV_ID: ${{ secrets.DEV_ID }}
+          KEYCHAIN_PROFILE: notary
+          AC_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          AC_TEAM: ${{ secrets.NOTARY_TEAM_ID }}
+          AC_PW: ${{ secrets.NOTARY_PASSWORD }}
+        run: |
+          xcrun notarytool store-credentials notary \
+            --apple-id "$AC_ID" --team-id "$AC_TEAM" --password "$AC_PW"
+          ./scripts/notarize.sh
+
+      - name: Build unsigned DMG (fallback)
+        if: ${{ secrets.DEV_ID == '' }}
+        run: ./scripts/make-dmg.sh
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DeveloperEdge.dmg
+          generate_release_notes: true
