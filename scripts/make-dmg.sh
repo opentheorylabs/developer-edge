@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# Package Zuperior Developer Edge.app into a distributable DMG for the team.
+# Package Developer Edge.app into a distributable DMG.
 #
 #   ./make-dmg.sh
 #
-# Produces ZuperiorDeveloperEdge.dmg with a drag-to-Applications layout.
-# The app is ad-hoc signed (no paid Apple Developer account needed) so teammates
-# can right-click → Open on first launch to get past Gatekeeper.
+# Produces DeveloperEdge.dmg with a drag-to-Applications layout.
+# The app is ad-hoc signed (no paid Apple Developer account needed) so users
+# can right-click → Open on first launch to get past Gatekeeper. For public
+# distribution, sign with a Developer ID and notarize instead (see README).
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Run from the repo root.
 cd "$SCRIPT_DIR/.."
 
-APP="Zuperior Developer Edge.app"
-VOL="Zuperior Developer Edge"
-DMG="ZuperiorDeveloperEdge.dmg"
+APP="Developer Edge.app"
+VOL="Developer Edge"
+DMG="DeveloperEdge.dmg"
 
 # 1. Build the release .app (script lives in scripts/)
 "$SCRIPT_DIR/make-app.sh"

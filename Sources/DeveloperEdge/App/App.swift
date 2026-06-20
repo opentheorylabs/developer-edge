@@ -3,7 +3,7 @@ import AppKit
 import MenuBarExtraAccess
 
 @main
-struct ZuperiorDeveloperEdgeApp: App {
+struct DeveloperEdgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var store: Store
     @State private var isPanelPresented = false
@@ -51,7 +51,7 @@ struct ZuperiorDeveloperEdgeApp: App {
             img.isTemplate = true
             return img
         }
-        let fallback = NSImage(systemSymbolName: "z.circle.fill", accessibilityDescription: "Zuperior")!
+        let fallback = NSImage(systemSymbolName: "hammer.circle.fill", accessibilityDescription: AppConfig.current.branding.appName)!
         fallback.isTemplate = true
         return fallback
     }()

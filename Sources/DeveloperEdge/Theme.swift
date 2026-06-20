@@ -15,7 +15,9 @@ enum Theme {
         static let icon:    CGFloat = 14     // larger icons
     }
 
-    static let green   = Color(red: 118/255, green: 185/255, blue: 0)
+    /// Brand accent · configurable via branding.accentColorHex (default #76B900).
+    /// Also used as the "success/up" tint, so success indicators follow the brand.
+    static var green: Color { Color(hex: AppConfig.current.branding.accentColorHex) }
     static let blue    = Color(red: 0.38,  green: 0.68, blue: 1.0)
     static let orange  = Color(red: 1.0,   green: 0.72, blue: 0.30)
     static let purple  = Color(red: 0.80,  green: 0.55, blue: 1.0)

@@ -78,7 +78,7 @@ struct SettingsView: View {
                         .padding(.horizontal, 14)
                         .padding(.bottom, 12)
 
-                    Text("Zuperior Developer Edge · v\(appVersion)")
+                    Text("\(AppConfig.current.branding.appName) · v\(appVersion)")
                         .font(.system(size: Theme.FontSize.tinyMd))
                         .foregroundColor(Theme.textMuted.opacity(0.5))
                         .frame(maxWidth: .infinity)

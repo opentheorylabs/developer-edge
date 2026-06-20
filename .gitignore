@@ -17,3 +17,6 @@ DerivedData/
 
 # Distributable disk image
 *.dmg
+
+*.app
+*.dmg

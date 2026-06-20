@@ -2,8 +2,7 @@ import AppKit
 import Defaults
 
 extension Store {
-    /// Picks a parent folder (default ~/Developer/Projects) then bootstraps the
-    /// whole Zuperior workspace inside it.
+    /// Picks a parent folder then bootstraps the whole workspace inside it.
     func selectParentAndSetup() {
         guard !setupRunning else { return }
         guard !githubToken.isEmpty else {
@@ -11,14 +10,21 @@ extension Store {
             setupExitCode = -1
             return
         }
+        // Folder to create when the picked location isn't already a workspace:
+        // the configured root's basename, else the org name, else "Workspace".
+        let configuredRoot = AppConfig.current.workspace.expandedRoot
+        let folderName = (configuredRoot as NSString).lastPathComponent
+        let projectFolder = !folderName.isEmpty ? folderName
+            : (AppConfig.current.github.org.isEmpty ? "Workspace" : AppConfig.current.github.org)
+
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.title = "Pick your workspace folder, or a parent to create Zuperior/ in"
+        panel.title = "Pick your workspace folder, or a parent to create \(projectFolder)/ in"
         panel.message = "An existing folder with repos will be scanned and reorganized."
         panel.prompt = "Use Folder"
-        let defaultParent = NSHomeDirectory() + "/Developer/Projects"
+        let defaultParent = (configuredRoot as NSString).deletingLastPathComponent
         if FileManager.default.fileExists(atPath: defaultParent) {
             panel.directoryURL = URL(fileURLWithPath: defaultParent)
         }
@@ -28,9 +34,9 @@ extension Store {
         panel.level = .modalPanel
         guard panel.runModal() == .OK, let url = panel.url else { return }
         // If they picked a folder that already holds repos, adopt it as the root;
-        // otherwise create a fresh Zuperior/ inside the chosen parent.
+        // otherwise create a fresh project folder inside the chosen parent.
         let picked = url.path
-        let root = looksLikeWorkspace(picked) ? picked : picked + "/Zuperior"
+        let root = looksLikeWorkspace(picked) ? picked : picked + "/" + projectFolder
         setupWorkspace(root: root)
     }
 
@@ -83,7 +89,7 @@ extension Store {
         setupWorkspace(root: workspaceRoot)
     }
 
-    /// Creates Zuperior/{Frontend,Backend,Mobile,DevOps}, clones every td-* repo
+    /// Creates the workspace subfolders, clones every matching repo
     /// the account can see (over SSH) into the right subfolder, then links AGENTS.md.
     /// Idempotent · existing repos are skipped.
     func setupWorkspace(root: String) {

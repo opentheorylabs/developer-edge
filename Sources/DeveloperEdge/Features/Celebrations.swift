@@ -63,7 +63,7 @@ enum Celebrations {
             let joinYear = Int(joined.prefix(4)) ?? 0
             let years = Calendar.current.component(.year, from: date) - joinYear
             if years > 0 {
-                return "🎊 \(years) \(years == 1 ? "year" : "years") at Zuperior today, \(first)!"
+                return "🎊 \(years) \(years == 1 ? "year" : "years") with the team today, \(first)!"
             }
         }
         return nil

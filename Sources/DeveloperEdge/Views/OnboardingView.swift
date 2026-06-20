@@ -119,7 +119,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 10) {
             numberedStep(1, "Open the page, then click \u{201C}Create API token\u{201D}.")
             grayButton("Open Token Page ↗") { openTokenPage() }
-            numberedStep(2, "Name it \u{201C}Zuperior Edge\u{201D}, then click Copy.")
+            numberedStep(2, "Name it \u{201C}\(AppConfig.current.branding.appName)\u{201D}, then click Copy.")
             numberedStep(3, "Switch back here · we grab it automatically.")
             HStack(spacing: 6) {
                 Spinner(color: Theme.orange, size: Theme.FontSize.heading, lineWidth: 1.5)

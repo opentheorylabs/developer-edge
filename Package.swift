@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ZuperiorDeveloperEdge",
+    name: "DeveloperEdge",
     platforms: [.macOS(.v13)],
     dependencies: [
         .package(url: "https://github.com/sindresorhus/Defaults", from: "8.0.0"),
@@ -12,14 +12,14 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "ZuperiorDeveloperEdge",
+            name: "DeveloperEdge",
             dependencies: [
                 .product(name: "Defaults", package: "Defaults"),
                 .product(name: "Pow", package: "Pow"),
                 .product(name: "LaunchAtLogin", package: "LaunchAtLogin-Modern"),
                 .product(name: "MenuBarExtraAccess", package: "MenuBarExtraAccess")
             ],
-            path: "Sources/ZuperiorDeveloperEdge"
+            path: "Sources/DeveloperEdge"
         )
     ]
 )

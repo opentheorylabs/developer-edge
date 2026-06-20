@@ -146,20 +146,22 @@ struct PanelView: View {
                     .onTapGesture { tapLogo() }
             }
 
-            Text("Developer Edge")
+            Text(AppConfig.current.branding.appName)
                 .font(.system(size: Theme.FontSize.icon, weight: .bold))
                 .foregroundStyle(LinearGradient(
                     colors: [Theme.purple, Theme.blue],
                     startPoint: .leading, endPoint: .trailing
                 ))
 
-            Text("BETA")
-                .font(.system(size: 8, weight: .heavy))
-                .tracking(0.5)
-                .foregroundColor(.black)
-                .padding(.horizontal, 6)
-                .frame(height: 14)
-                .background(Capsule().fill(.white))
+            if AppConfig.current.branding.showBetaBadge {
+                Text("BETA")
+                    .font(.system(size: 8, weight: .heavy))
+                    .tracking(0.5)
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 6)
+                    .frame(height: 14)
+                    .background(Capsule().fill(.white))
+            }
 
             Spacer()
 
