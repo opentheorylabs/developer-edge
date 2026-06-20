@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuperior Developer Edge · Feature Demo</title>
+<style>
+  :root{
+    --bg:#0b0c10; --card:#191c24; --cardhi:#222633; --line:rgba(255,255,255,.09);
+    --txt:#eef0f5; --muted:#9aa0ad; --faint:#6b7280;
+    --purple:#a78bfa; --blue:#5ca8f7; --green:#5cbd6c; --orange:#e8a33a; --pink:#f06a94;
+  }
+  *{box-sizing:border-box}
+  html,body{overflow-x:hidden}
+  body{margin:0;color:var(--txt);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(900px 500px at 15% -5%,rgba(167,139,250,.18),transparent 60%),
+      radial-gradient(800px 500px at 95% 10%,rgba(92,168,247,.14),transparent 55%),
+      #0b0c10;}
+  /* drifting aurora layer */
+  .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(60px);opacity:.5;
+    background:
+      radial-gradient(closest-side at 30% 40%,rgba(167,139,250,.5),transparent),
+      radial-gradient(closest-side at 70% 60%,rgba(92,168,247,.4),transparent);
+    animation:drift 18s ease-in-out infinite alternate;}
+  @keyframes drift{from{transform:translate(-4%,-2%) scale(1)}to{transform:translate(5%,3%) scale(1.15)}}
+
+  .wrap{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:56px 22px 40px;}
+  header{display:flex;align-items:center;gap:13px;flex-wrap:wrap;}
+  .bolt{width:38px;height:38px;flex:none;filter:drop-shadow(0 4px 14px rgba(167,139,250,.6));
+    animation:floaty 4s ease-in-out infinite;}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  h1{font-size:30px;margin:0;font-weight:800;letter-spacing:-.5px;
+    background:linear-gradient(90deg,#c4b5fd,#7cc0ff,#c4b5fd);background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    animation:shine 6s linear infinite;}
+  @keyframes shine{to{background-position:200% center}}
+  .pill{font-size:11px;font-weight:800;letter-spacing:.5px;color:#000;background:#fff;padding:3px 9px;border-radius:999px;
+    box-shadow:0 0 0 0 rgba(255,255,255,.5);animation:pulse 2.6s ease-out infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.45)}70%{box-shadow:0 0 0 10px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 transparent}}
+  .sub{color:var(--muted);font-size:15.5px;margin:14px 0 4px;max-width:640px;}
+  .hint{color:var(--faint);font-size:13px;margin:0 0 30px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:14px;}
+  .tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px 16px;
+    cursor:pointer;text-align:left;color:inherit;font:inherit;overflow:hidden;
+    transition:transform .14s,background .14s,border-color .14s,box-shadow .14s;
+    display:flex;flex-direction:column;gap:8px;opacity:0;transform:translateY(14px);
+    animation:rise .5s cubic-bezier(.2,.7,.2,1) forwards;}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .tile:hover{background:var(--cardhi);transform:translateY(-3px);border-color:rgba(255,255,255,.2);
+    box-shadow:0 12px 30px rgba(0,0,0,.35);}
+  .tile::after{content:"";position:absolute;inset:0;border-radius:15px;opacity:0;transition:opacity .14s;
+    background:radial-gradient(140px 90px at 30% 0%,var(--c,#a78bfa),transparent 70%);}
+  .tile:hover::after{opacity:.14;}
+  .tile .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:19px;}
+  .tile h3{margin:0;font-size:15px;font-weight:700;}
+  .tile p{margin:0;font-size:12px;color:var(--muted);}
+  .tile .cnt{margin-top:2px;font-size:11px;color:var(--faint);}
+
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:24px;z-index:20;opacity:0;transition:opacity .16s;}
+  .backdrop.open{display:flex;opacity:1;}
+  .modal{background:linear-gradient(180deg,#1d212b,#171a22);border:1px solid var(--line);border-radius:18px;
+    max-width:520px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.5);
+    transform:translateY(14px) scale(.97);transition:transform .18s cubic-bezier(.2,.8,.2,1);}
+  .backdrop.open .modal{transform:none;}
+  .mhead{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;position:sticky;top:0;
+    background:#1b1f28;border-bottom:1px solid var(--line);}
+  .mhead .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex:none;}
+  .mhead h2{margin:0;font-size:18px;font-weight:750;flex:1;}
+  .mhead .x{cursor:pointer;color:var(--muted);font-size:22px;line-height:1;border:none;background:none;padding:2px 6px;}
+  .mhead .x:hover{color:var(--txt);}
+  ul{list-style:none;margin:0;padding:8px 18px 18px;}
+  li{position:relative;padding:10px 0 10px 22px;font-size:13.5px;border-bottom:1px solid rgba(255,255,255,.05);
+    opacity:0;transform:translateX(-6px);animation:slidein .32s ease forwards;}
+  @keyframes slidein{to{opacity:1;transform:none}}
+  li:last-child{border-bottom:none;}
+  li::before{content:"";position:absolute;left:3px;top:16px;width:6px;height:6px;border-radius:50%;background:var(--accent,#a78bfa);
+    box-shadow:0 0 8px var(--accent,#a78bfa);}
+  li b{font-weight:650;}
+  li span{color:var(--muted);}
+
+  /* scrolling footer ticker */
+  .ticker{position:relative;z-index:1;margin-top:42px;border-top:1px solid var(--line);
+    background:rgba(255,255,255,.02);overflow:hidden;white-space:nowrap;}
+  .ticker .track{display:inline-block;padding:13px 0;animation:scroll 75s linear infinite;}
+  .ticker:hover .track{animation-play-state:paused;}
+  .ticker span{color:var(--muted);font-size:12.5px;margin:0 26px;}
+  .ticker b{color:var(--purple);}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .foot{position:relative;z-index:1;text-align:center;color:var(--faint);font-size:12px;padding:16px;}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="wrap">
+  <header>
+    <svg class="bolt" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5ca8f7"/></linearGradient></defs>
+      <rect x="3" y="3" width="42" height="42" rx="12" fill="url(#g)"/>
+      <path d="M27 9 L15 26 H23 L21 39 L33 22 H25 Z" fill="#fff"/>
+    </svg>
+    <h1>Zuperior Developer Edge</h1>
+    <span class="pill">BETA&nbsp;&nbsp;v0.9.1</span>
+  </header>
+  <p class="sub">A macOS menu bar companion for the trading platform dev team. Everything you reach for daily, one click from the menu bar.</p>
+  <p class="hint">Click any category to explore its features.</p>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="ticker"><div class="track" id="track"></div></div>
+<div class="foot">Zuperior Developer Edge · v0.9.1 (Beta) · built for the trading platform team</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" id="modal">
+    <div class="mhead"><div class="ic" id="mIc"></div><h2 id="mTitle"></h2><button class="x" id="mClose">&times;</button></div>
+    <ul id="mList"></ul>
+  </div>
+</div>
+
+<script>
+const C = [
+  {id:"dev", icon:"🛠", color:"#5cbd6c", title:"Development", tag:"Your daily cockpit", items:[
+    ["Suggested Actions","morning nudges: Join Standup (Meet link) before 10am, Git Fetch All before noon"],
+    ["Git Fetch All","fetch, pull and prune every repo, with a staleness badge"],
+    ["Open Lens","syncs all three cluster kubeconfigs, then launches Lens"],
+    ["Setup / Open Workspace","one click workspace button"],
+    ["Review Graph","install and build the code review knowledge graph per repo"],
+    ["Links","Google Drive, Figma, Cloudflare, plus your Slack channels"],
+    ["Localhost health","per service ports, live running scan, open in browser"],
+  ]},
+  {id:"gh", icon:"🐙", color:"#5ca8f7", title:"GitHub", tag:"PRs and reviews", items:[
+    ["My open PRs","across the whole org, newest first"],
+    ["Review requests","pull requests waiting on you"],
+    ["Badges and timestamps","repo and draft badges, relative times, one click open"],
+    ["Quick links","review queue and org repositories"],
+    ["Clean states","powered by your GitHub token, with empty and loading states"],
+  ]},
+  {id:"jira", icon:"📋", color:"#e8a33a", title:"JIRA", tag:"Your sprint, focused", items:[
+    ["Your sprint tickets","assigned to you in the open sprint"],
+    ["Filter tabs","ToDo, In Progress, Completed, with counts"],
+    ["Type icons","Jira style icons for Bug, Story, Task, Spike"],
+    ["Priority flag","on high priority items, one click open"],
+    ["Shortcuts","Sprint Board and Assigned to Me"],
+    ["Stateful","loading, empty, and error with retry"],
+  ]},
+  {id:"svc", icon:"🌐", color:"#a78bfa", title:"Services", tag:"Every env at a glance", items:[
+    ["Environment switcher","Dev, Staging, Prod"],
+    ["Live health checks","every frontend and API per environment"],
+    ["Pipeline status","latest GitHub Actions run per service"],
+    ["Grafana","one link per environment"],
+  ]},
+  {id:"setup", icon:"📦", color:"#a78bfa", title:"Workspace Setup", tag:"One click onboarding", items:[
+    ["Clone everything","every td-* repo you can access, over SSH"],
+    ["Auto organize","sorts into Frontend, Backend, Mobile, DevOps"],
+    ["Adopt a folder","scans and reorganizes a messy existing folder"],
+    ["Link AGENTS.md","wired across every repo automatically"],
+    ["Open Workspace","button becomes Open Workspace once set up"],
+    ["Download New Repos","nudges when you gain access to new repos"],
+    ["Update AI Instructions","when td-ai-instructions has new commits"],
+  ]},
+  {id:"settings", icon:"⚙️", color:"#5cbd6c", title:"Settings", tag:"Make it yours", items:[
+    ["Workspace folder","with open in terminal"],
+    ["Terminal chooser","dropdown of installed terminals (iTerm, Ghostty, VS Code and more)"],
+    ["Credentials","GitHub PAT and Jira email, token, ID, with smart paste and name auto detect"],
+    ["Pickers","Quick Links and Slack channels"],
+    ["Launch at login","one toggle"],
+  ]},
+  {id:"polish", icon:"✨", color:"#f06a94", title:"Personal Touches", tag:"Little things", items:[
+    ["Greets you by name","pulled from your Jira profile"],
+    ["Celebrations","birthdays, work anniversaries, Diwali, Holi and more"],
+    ["Rotating footer","morning greeting, lunch nudge, late-night and weekend cheer"],
+    ["Native feel","brand icons, smooth transitions, dark menu bar panel"],
+    ["Easy install","ships as one DMG, drag to Applications"],
+  ]},
+];
+
+const grid = document.getElementById('grid');
+C.forEach((c,i) => {
+  const t = document.createElement('button');
+  t.className = 'tile';
+  t.style.setProperty('--c', c.color);
+  t.style.animationDelay = (i*60)+'ms';
+  t.innerHTML = `<div class="ic" style="background:${c.color}22;">${c.icon}</div>
+    <h3>${c.title}</h3><p>${c.tag}</p><div class="cnt">${c.items.length} features →</div>`;
+  t.onclick = () => openCat(c);
+  grid.appendChild(t);
+});
+
+// footer ticker (duplicated for seamless loop)
+const lines = C.flatMap(c => c.items.map(it => `<b>${c.title}</b> ${it[0]}`));
+const track = document.getElementById('track');
+track.innerHTML = (lines.map(l=>`<span>${l}</span>`).join('')).repeat(2);
+
+const backdrop = document.getElementById('backdrop');
+function openCat(c){
+  document.getElementById('mIc').textContent = c.icon;
+  document.getElementById('mIc').style.background = c.color + '22';
+  document.getElementById('mTitle').textContent = c.title;
+  document.documentElement.style.setProperty('--accent', c.color);
+  const list = document.getElementById('mList');
+  list.innerHTML = '';
+  c.items.forEach(([h,d],i) => {
+    const li = document.createElement('li');
+    li.style.animationDelay = (i*45)+'ms';
+    li.innerHTML = `<b>${h}</b><span> &nbsp;${d}</span>`;
+    list.appendChild(li);
+  });
+  backdrop.classList.add('open');
+}
+function closeM(){ backdrop.classList.remove('open'); }
+document.getElementById('mClose').onclick = closeM;
+backdrop.onclick = e => { if(e.target === backdrop) closeM(); };
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeM(); });
+</script>
+</body>
+</html>
