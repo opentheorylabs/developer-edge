@@ -31,7 +31,7 @@ brew install --cask developer-edge
 Requires Xcode command-line tools (Swift 5.9+) and macOS 13+.
 
 ```bash
-git clone https://github.com/your-org/developer-edge.git
+git clone https://github.com/opentheorylabs/developer-edge.git
 cd developer-edge
 ./scripts/make-app.sh --install    # builds, copies to /Applications, launches
 ```
