@@ -93,8 +93,18 @@ struct PRItem: Identifiable {
     let repo: String
     let author: String
     let draft: Bool
+    let createdAt: Date
     let updatedAt: Date
     let htmlUrl: String
+
+    enum StaleLevel { case fresh, warning, critical }
+
+    var staleLevel: StaleLevel {
+        let hours = Date().timeIntervalSince(createdAt) / 3600
+        if hours >= 72 { return .critical }
+        if hours >= 48 { return .warning }
+        return .fresh
+    }
 }
 
 // MARK: - RepoInfo

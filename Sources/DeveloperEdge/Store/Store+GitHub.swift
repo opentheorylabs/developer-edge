@@ -38,12 +38,15 @@ extension Store {
                           let repoUrl = item["repository_url"] as? String,
                           let user = item["user"] as? [String: Any],
                           let author = user["login"] as? String,
+                          let createdStr = item["created_at"] as? String,
+                          let createdAt = fmt.date(from: createdStr),
                           let updatedStr = item["updated_at"] as? String,
                           let updatedAt = fmt.date(from: updatedStr) else { return nil }
                     let repo = repoUrl.components(separatedBy: "/").last ?? repoUrl
                     let draft = (item["draft"] as? Bool) ?? false
                     return PRItem(id: id, number: id, title: title, repo: repo,
-                                  author: author, draft: draft, updatedAt: updatedAt, htmlUrl: htmlUrl)
+                                  author: author, draft: draft,
+                                  createdAt: createdAt, updatedAt: updatedAt, htmlUrl: htmlUrl)
                 }
                 lock.lock()
                 if key == "authored" { authored = parsed } else { review = parsed }

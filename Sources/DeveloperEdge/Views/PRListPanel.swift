@@ -83,7 +83,7 @@ struct PRListPanel: View {
     }
 
     private var showAllButton: some View {
-        Button(action: { NSWorkspace.shared.open(URL(string: myPRsURL)!) }) {
+        Button(action: { if let u = URL(string: myPRsURL) { NSWorkspace.shared.open(u) } }) {
             HStack(spacing: 4) {
                 Text("Show all \(store.myPRs.count) on GitHub")
                     .font(.system(size: Theme.FontSize.small))
@@ -137,16 +137,17 @@ private struct PRRow: View {
     let pr: PRItem
 
     var body: some View {
-        Button(action: { NSWorkspace.shared.open(URL(string: pr.htmlUrl)!) }) {
+        Button(action: { if let u = URL(string: pr.htmlUrl) { NSWorkspace.shared.open(u) } }) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         repoBadge
                         if pr.draft { draftBadge }
+                        if pr.staleLevel != .fresh { staleBadge }
                         Spacer(minLength: 0)
                         Text(relativeTime)
                             .font(.system(size: Theme.FontSize.tinyMd))
-                            .foregroundColor(Theme.textMuted.opacity(0.55))
+                            .foregroundColor(staleTimeColor)
                     }
                     Text(pr.title)
                         .font(.system(size: Theme.FontSize.title, weight: .medium))
@@ -176,6 +177,25 @@ private struct PRRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private var staleBadge: some View {
+        let (label, color): (String, Color) = pr.staleLevel == .critical
+            ? ("72h+", Theme.red)
+            : ("48h+", Theme.orange)
+        return Text(label)
+            .font(.system(size: Theme.FontSize.tiny, weight: .semibold))
+            .foregroundColor(color)
+            .padding(.horizontal, 5).padding(.vertical, 2)
+            .background(RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.12)))
+    }
+
+    private var staleTimeColor: Color {
+        switch pr.staleLevel {
+        case .critical: return Theme.red.opacity(0.8)
+        case .warning:  return Theme.orange.opacity(0.8)
+        case .fresh:    return Theme.textMuted.opacity(0.55)
+        }
     }
 
     private var repoBadge: some View {
