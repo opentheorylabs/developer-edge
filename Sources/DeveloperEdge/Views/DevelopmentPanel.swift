@@ -10,6 +10,12 @@ struct DevelopmentPanel: View {
             VStack(alignment: .leading, spacing: 0) {
 
 
+                // ── Current Branch ────────────────────────────────────────
+                if let branchView = branchBanner {
+                    branchView
+                        .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 2)
+                }
+
                 // ── Dev Tools ─────────────────────────────────────────────
                 sectionHeader("Dev Tools")
                 devToolsSection
@@ -37,12 +43,87 @@ struct DevelopmentPanel: View {
             .padding(.top, 2)
         }
         .onAppear {
+            store.readCurrentBranch()
             store.checkLocalhostHealth()
             store.scanLocalListeners()
             if store.repos.isEmpty { store.scanRepos() }
             store.checkAIInstructionsUpdate()
             store.checkForNewRepos()
         }
+    }
+
+    // MARK: - Current Branch
+
+    /// Returns nil for trunk branches (main, master, development, staging, production)
+    /// so the banner only shows when the user is on a feature/fix branch.
+    private var branchBanner: AnyView? {
+        let branch = store.currentBranch
+        let trunks: Set<String> = ["main", "master", "development", "staging", "production", "HEAD", ""]
+        guard !trunks.contains(branch) else { return nil }
+
+        let ticketId = store.currentBranchTicketId
+        let ticketURL = ticketURL(for: ticketId)
+
+        return AnyView(
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.triangle.branch")
+                    .font(.system(size: Theme.FontSize.small, weight: .medium))
+                    .foregroundColor(Theme.textMuted.opacity(0.6))
+                Text(branch)
+                    .font(.system(size: Theme.FontSize.label, design: .monospaced))
+                    .foregroundColor(Theme.textPrimary.opacity(0.75))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if let id = ticketId {
+                    Spacer(minLength: 4)
+                    if let url = ticketURL {
+                        Button(action: { NSWorkspace.shared.open(url) }) {
+                            ticketChip(id, linked: true)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Open \(id)")
+                    } else {
+                        ticketChip(id, linked: false)
+                    }
+                } else {
+                    Spacer(minLength: 0)
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.07), lineWidth: 0.5))
+        )
+    }
+
+    @ViewBuilder
+    private func ticketChip(_ id: String, linked: Bool) -> some View {
+        HStack(spacing: 4) {
+            Text(id)
+                .font(.system(size: Theme.FontSize.label, weight: .semibold, design: .monospaced))
+                .foregroundColor(linked ? Theme.blue : Theme.textMuted.opacity(0.6))
+            if linked {
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: Theme.FontSize.tiny, weight: .bold))
+                    .foregroundColor(Theme.blue.opacity(0.6))
+            }
+        }
+        .padding(.horizontal, 6).padding(.vertical, 3)
+        .background(RoundedRectangle(cornerRadius: 5)
+            .fill(linked ? Theme.blue.opacity(0.10) : Color.white.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 5)
+            .stroke(linked ? Theme.blue.opacity(0.2) : Color.white.opacity(0.07), lineWidth: 0.5))
+    }
+
+    private func ticketURL(for id: String?) -> URL? {
+        guard let id else { return nil }
+        if AppConfig.current.linear != nil {
+            let matched = store.linearIssues.first { $0.identifier == id }
+            return matched.flatMap { URL(string: $0.url) }
+        }
+        if let host = AppConfig.current.jira?.host {
+            return URL(string: "https://\(host)/browse/\(id)")
+        }
+        return nil
     }
 
     // MARK: - Dev Tools

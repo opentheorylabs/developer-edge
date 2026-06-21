@@ -118,6 +118,10 @@ final class Store: ObservableObject {
             || !repos.isEmpty
     }
 
+    // MARK: - Current branch
+    @Published var currentBranch: String = ""
+    @Published var currentBranchTicketId: String? = nil
+
     // MARK: - Session (bumped each time the popover opens)
     @Published var popoverSession = UUID()
 
