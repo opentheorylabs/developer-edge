@@ -68,11 +68,6 @@ struct SettingsView: View {
                         .padding(.horizontal, 14)
                         .padding(.bottom, 4)
 
-                    sectionHeader("Slack Channels")
-                    slackSection
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 14)
-
                     sectionHeader("App")
                     launchAtLoginRow
                         .padding(.horizontal, 14)
@@ -516,54 +511,6 @@ struct SettingsView: View {
         }
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.04)))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 0.5))
-    }
-
-    // MARK: - Slack section (2-column)
-
-    private var slackSection: some View {
-        let atMax = store.enabledSlackChannels.count >= 3
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-            ForEach(allSlackChannels) { ch in
-                let enabled = store.enabledSlackChannels.contains(ch.id)
-                Button(action: {
-                    guard enabled || !atMax else { return }
-                    var updated = store.enabledSlackChannels
-                    if enabled { updated.remove(ch.id) } else { updated.insert(ch.id) }
-                    store.enabledSlackChannels = updated
-                    Defaults[.enabledSlackChannels] = updated
-                }) {
-                    HStack(spacing: 8) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(enabled ? ch.color : Color.white.opacity(0.06))
-                                .frame(width: 16, height: 16)
-                            if enabled {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: Theme.FontSize.tiny, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        Image(systemName: ch.icon)
-                            .font(.system(size: Theme.FontSize.small))
-                            .foregroundColor(enabled ? ch.color : Theme.textMuted.opacity(0.5))
-                            .frame(width: 14)
-                        Text(ch.title)
-                            .font(.system(size: Theme.FontSize.small, weight: .medium))
-                            .foregroundColor(enabled ? Theme.textPrimary : Theme.textMuted.opacity(0.6))
-                            .lineLimit(1)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 10).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.04)))
-                    .overlay(RoundedRectangle(cornerRadius: 8)
-                        .stroke(enabled ? ch.color.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 0.5))
-                    .contentShape(Rectangle())
-                    .opacity(!enabled && atMax ? 0.4 : 1)
-                }
-                .buttonStyle(.plain)
-                .disabled(!enabled && atMax)
-            }
-        }
     }
 
     // MARK: - Section header

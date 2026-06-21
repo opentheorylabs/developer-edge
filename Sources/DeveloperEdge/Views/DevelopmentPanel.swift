@@ -1,56 +1,24 @@
 import SwiftUI
 
-private let standupURL = "https://meet.google.com/gco-urzo-ggd"
-
 struct DevelopmentPanel: View {
     @ObservedObject var store: Store
     @State private var editingPortRepo: String? = nil
     @State private var portDraft = ""
 
-    // Suggested actions show only in the morning window: 10am to 12pm.
-    private var inSuggestWindow: Bool {
-        let h = Calendar.current.component(.hour, from: Date())
-        return h >= 10 && h < 12
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
-                // ── Suggested Actions (10am·12pm) ─────────────────────────
-                if inSuggestWindow {
-                    sectionHeader("Suggested Actions")
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                        ActionGridButton(
-                            icon: "video.fill", color: Theme.green,
-                            title: "Join Standup", subtitle: "Daily standup call",
-                            running: false,
-                            action: { NSWorkspace.shared.open(URL(string: standupURL)!) }
-                        )
-                        ActionGridButton(
-                            icon: "arrow.triangle.2.circlepath", color: Theme.blue,
-                            title: "Git Fetch All", subtitle: "Start your day in sync",
-                            running: store.fetchRunning,
-                            action: { store.runGitFetchAll() }
-                        )
-                    }
-                    .padding(.horizontal, 14).padding(.bottom, 4)
-                }
 
                 // ── Dev Tools ─────────────────────────────────────────────
                 sectionHeader("Dev Tools")
                 devToolsSection
                     .padding(.horizontal, 14).padding(.bottom, 4)
 
-                // ── Links (quick links + slack channels) ──────────────────
-                let linkItems = allQuickLinks
+                // ── Links (quick links) ───────────────────────────────────
+                let items = allQuickLinks
                     .filter { store.enabledQuickLinks.contains($0.id) }
                     .map { GridButtonData(icon: $0.icon, color: $0.color, title: $0.title, subtitle: $0.subtitle, url: $0.url) }
-                let slackItems = allSlackChannels
-                    .filter { store.enabledSlackChannels.contains($0.id) }
-                    .map { GridButtonData(icon: $0.icon, color: $0.color, title: $0.title, subtitle: $0.subtitle,
-                                          url: "https://slack.com/app_redirect?channel=\($0.id)") }
-                let items = linkItems + slackItems
                 if !items.isEmpty {
                     sectionHeader("Links")
                     VStack(spacing: 8) {

@@ -128,24 +128,6 @@ struct LocalListener: Identifiable {
     let processName: String
 }
 
-// MARK: - SlackChannelDef
-
-struct SlackChannelDef: Identifiable {
-    let id: String          // channel slug, e.g. "trading-core"
-    let icon: String
-    let color: Color
-    let title: String
-    let subtitle: String
-}
-
-/// Slack channels from the loaded config.
-var allSlackChannels: [SlackChannelDef] {
-    AppConfig.current.slackChannels.map {
-        SlackChannelDef(id: $0.id, icon: $0.icon, color: Color(hex: $0.colorHex),
-                        title: $0.title, subtitle: $0.subtitle)
-    }
-}
-
 // MARK: - TerminalApp
 
 struct TerminalApp: Identifiable {

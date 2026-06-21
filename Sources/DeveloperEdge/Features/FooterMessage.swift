@@ -62,8 +62,6 @@ enum FooterMessage {
         ]
     }
 
-    /// `name` is an optional first name; `fullName` is the Jira display name used
-    /// to match birthdays / work anniversaries.
     static func current(name: String? = nil, fullName: String? = nil) -> String {
         let now = Date()
         let calendar = Calendar.current
@@ -71,8 +69,6 @@ enum FooterMessage {
         let weekday = calendar.component(.weekday, from: now)   // 1 = Sun, 7 = Sat
         let today = calendar.startOfDay(for: now)
 
-        // Highest priority: the person's own day, then holidays.
-        if let g = Celebrations.personalGreeting(for: fullName ?? "", date: now) { return g }
         if let h = Celebrations.holidayGreeting(now) { return h }
 
         // Working late (midnight to 5am) · encouraging, not "go home".

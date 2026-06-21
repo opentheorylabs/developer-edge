@@ -27,8 +27,6 @@ struct AppConfig: Codable {
     var services: [Service]
     var clusters: [ClusterDef]
     var quickLinks: [QuickLink]
-    var slackChannels: [SlackChannel]
-    var celebrations: Celebrations?
 
     // MARK: Sections
 
@@ -163,25 +161,6 @@ struct AppConfig: Codable {
         var mandatory: Bool
     }
 
-    struct SlackChannel: Codable, Identifiable {
-        var id: String
-        var icon: String
-        var colorHex: String
-        var title: String
-        var subtitle: String
-    }
-
-    struct Celebrations: Codable {
-        var enabled: Bool
-        var locale: String?                 // e.g. "en_IN" for regional holidays
-        var rosterPath: String?             // path to celebrations.json (birthdays/anniversaries)
-
-        init(enabled: Bool = false, locale: String? = nil, rosterPath: String? = nil) {
-            self.enabled = enabled
-            self.locale = locale
-            self.rosterPath = rosterPath
-        }
-    }
 }
 
 // MARK: - Decoding with defaults
@@ -200,8 +179,6 @@ extension AppConfig {
         services      = try c.decodeIfPresent([Service].self,       forKey: .services)      ?? []
         clusters      = try c.decodeIfPresent([ClusterDef].self,    forKey: .clusters)      ?? []
         quickLinks    = try c.decodeIfPresent([QuickLink].self,     forKey: .quickLinks)    ?? []
-        slackChannels = try c.decodeIfPresent([SlackChannel].self,  forKey: .slackChannels) ?? []
-        celebrations  = try c.decodeIfPresent(Celebrations.self,    forKey: .celebrations)
     }
 }
 
@@ -259,9 +236,7 @@ extension AppConfig {
         ],
         services: [],
         clusters: [],
-        quickLinks: [],
-        slackChannels: [],
-        celebrations: nil
+        quickLinks: []
     )
 }
 

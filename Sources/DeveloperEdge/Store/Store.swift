@@ -44,8 +44,6 @@ final class Store: ObservableObject {
 
     @Published var enabledQuickLinks: Set<String> = Defaults[.enabledQuickLinks]
 
-    @Published var enabledSlackChannels: Set<String> = Defaults[.enabledSlackChannels]
-
     // MARK: - Pipelines
     @Published var pipelineStatuses: [String: PipelineStatus] = [:]
     @Published var pipelineRunURLs: [String: String] = [:]   // repo → latest run html_url

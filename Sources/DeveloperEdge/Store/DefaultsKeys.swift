@@ -12,14 +12,10 @@ extension Defaults.Keys {
     static let githubToken = Key<String>("githubToken", default: "")
     static let onboardingComplete = Key<Bool>("onboardingComplete", default: false)
 
-    // MARK: - Quick links / Slack
+    // MARK: - Quick links
     static let enabledQuickLinks = Key<Set<String>>(
         "enabledQuickLinks",
         default: Set(allQuickLinks.filter(\.mandatory).map(\.id))
-    )
-    static let enabledSlackChannels = Key<Set<String>>(
-        "enabledSlackChannels",
-        default: Set(allSlackChannels.prefix(2).map(\.id))
     )
 
     // MARK: - Localhost
