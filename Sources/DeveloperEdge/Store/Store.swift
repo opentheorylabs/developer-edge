@@ -128,8 +128,15 @@ final class Store: ObservableObject {
     @Published var jiraFetching = false
     @Published var jiraFetchError: String? = nil
     @Published var jiraLastFetch: Date?
-    /// Set by a 60s timer after each successful Jira fetch · drives auto-refresh on next popover open.
     @Published var jiraNeedsRefresh = true
+
+    // MARK: - Linear
+    @Published var linearApiKey: String     = Defaults[.linearApiKey]
+    @Published var linearIssues: [LinearIssue] = []
+    @Published var linearFetching = false
+    @Published var linearFetchError: String? = nil
+    @Published var linearLastFetch: Date?
+    @Published var linearNeedsRefresh = true
 
     // MARK: - Shared URLSession
     let session: URLSession = {

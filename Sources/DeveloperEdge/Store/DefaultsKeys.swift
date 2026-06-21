@@ -8,6 +8,7 @@ extension Defaults.Keys {
     static let jiraEmail = Key<String>("jiraEmail", default: "")
     static let jiraApiToken = Key<String>("jiraApiToken", default: "")
     static let jiraAccountId = Key<String>("jiraAccountId", default: "")
+    static let linearApiKey = Key<String>("linearApiKey", default: "")
     static let userName = Key<String>("userName", default: "")
     static let githubToken = Key<String>("githubToken", default: "")
     static let onboardingComplete = Key<Bool>("onboardingComplete", default: false)

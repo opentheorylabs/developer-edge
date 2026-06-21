@@ -120,6 +120,28 @@ struct JiraTicket: Identifiable {
     let issueType: String?
 }
 
+// MARK: - LinearIssue
+
+struct LinearIssue: Identifiable {
+    let id: String
+    let identifier: String      // e.g. "ENG-123"
+    let title: String
+    let stateName: String
+    let stateType: String       // "triage" | "backlog" | "unstarted" | "started" | "completed" | "cancelled"
+    let priority: Int           // 0=none 1=urgent 2=high 3=medium 4=low
+    let priorityLabel: String
+    let url: String
+    let teamName: String?
+
+    var statusCategory: String {
+        switch stateType {
+        case "started":              return "In Progress"
+        case "completed":            return "Done"
+        default:                     return "To Do"
+        }
+    }
+}
+
 // MARK: - LocalListener
 
 struct LocalListener: Identifiable {

@@ -11,6 +11,10 @@ struct SettingsView: View {
     @State private var editingGithubToken = false
     @State private var savingGithubToken = false
 
+    @State private var linearKeyDraft = ""
+    @State private var editingLinearKey = false
+    @State private var savingLinearKey = false
+
     @State private var jiraEmailDraft = ""
     @State private var editingJiraEmail = false
     @State private var savingJiraEmail = false
@@ -51,6 +55,13 @@ struct SettingsView: View {
                     githubTokenRow
                         .padding(.horizontal, 14)
                         .padding(.bottom, 8)
+
+                    if AppConfig.current.linear != nil {
+                        sectionHeader("Linear")
+                        linearKeyRow
+                            .padding(.horizontal, 14)
+                            .padding(.bottom, 8)
+                    }
 
                     sectionHeader("Jira")
                     jiraEmailRow
@@ -262,6 +273,59 @@ struct SettingsView: View {
             try? await Task.sleep(nanoseconds: 500_000_000)
             await MainActor.run { savingGithubToken = false }
         }
+    }
+
+    // MARK: - Linear row
+
+    private var linearKeyRow: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "key.horizontal")
+                .font(.system(size: Theme.FontSize.small))
+                .foregroundColor(Theme.textMuted)
+                .frame(width: 14)
+            Text("API Key")
+                .font(.system(size: Theme.FontSize.label, weight: .medium))
+                .foregroundColor(Theme.textMuted)
+            if editingLinearKey {
+                TextField("lin_api_…", text: $linearKeyDraft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: Theme.FontSize.label, design: .monospaced))
+                    .foregroundColor(Theme.textPrimary)
+                    .onSubmit { saveLinearKey() }
+            } else {
+                Text(store.linearApiKey.isEmpty
+                     ? "Not set · required for issues"
+                     : String(repeating: "•", count: min(store.linearApiKey.count, 20)))
+                    .font(.system(size: Theme.FontSize.label, design: .monospaced))
+                    .foregroundColor(store.linearApiKey.isEmpty
+                                     ? Theme.textMuted.opacity(0.4)
+                                     : Theme.textPrimary.opacity(0.6))
+                    .lineLimit(1)
+            }
+            Spacer()
+            fieldAction(
+                currentValue: store.linearApiKey,
+                isEditing: editingLinearKey,
+                isSaving: savingLinearKey,
+                draft: linearKeyDraft,
+                onSet:    { linearKeyDraft = ""; editingLinearKey = true },
+                onPaste:  { linearKeyDraft = clipboard ?? ""; editingLinearKey = true },
+                onSave:   { saveLinearKey() },
+                onChange: { linearKeyDraft = store.linearApiKey; editingLinearKey = true }
+            )
+        }
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.04)))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.08), lineWidth: 0.5))
+    }
+
+    private func saveLinearKey() {
+        let trimmed = linearKeyDraft.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { editingLinearKey = false; return }
+        editingLinearKey = false; savingLinearKey = true
+        store.linearApiKey = trimmed
+        Defaults[.linearApiKey] = trimmed
+        Task { try? await Task.sleep(nanoseconds: 500_000_000); await MainActor.run { savingLinearKey = false } }
     }
 
     // MARK: - Jira rows

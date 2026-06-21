@@ -6,12 +6,15 @@ import Defaults
 struct TabBar: View {
     @Binding var active: String
 
-    private let tabs: [(id: String, label: String, color: Color, icon: TabIcon)] = [
-        ("dev",   "Development", Theme.green,  .sf("hammer.fill")),
-        ("prs",   "GitHub",      Theme.blue,   .brand(.github)),
-        ("jira",  "JIRA",        Theme.orange, .brand(.jira)),
-        ("envs",  "Services",    Theme.purple, .sf("square.stack.3d.up.fill")),
-    ]
+    private var tabs: [(id: String, label: String, color: Color, icon: TabIcon)] {
+        let taskIcon: TabIcon = AppConfig.current.linear != nil ? .brand(.linear) : .brand(.jira)
+        return [
+            ("dev",   "Development", Theme.green,  .sf("hammer.fill")),
+            ("prs",   "GitHub",      Theme.blue,   .brand(.github)),
+            ("tasks", "Tasks",       Theme.orange, taskIcon),
+            ("envs",  "Services",    Theme.purple, .sf("square.stack.3d.up.fill")),
+        ]
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -84,15 +87,19 @@ struct PanelView: View {
 
                 Group {
                     switch activeTab {
-                    case "dev":  DevelopmentPanel(store: store)
-                    case "prs":  PRListPanel(store: store, onOpenSettings: { showSettings = true })
-                    case "jira": QuickActionsPanel(store: store, onOpenSettings: { showSettings = true })
-                    default:     EnvironmentsPanel(store: store)
+                    case "dev":   DevelopmentPanel(store: store)
+                    case "prs":   PRListPanel(store: store, onOpenSettings: { showSettings = true })
+                    case "tasks": QuickActionsPanel(store: store, onOpenSettings: { showSettings = true })
+                    default:      EnvironmentsPanel(store: store)
                     }
                 }
                 .frame(height: 440)
                 .onChange(of: activeTab) { tab in
-                    if tab == "prs" { store.fetchOpenPRs() }
+                    if tab == "prs"   { store.fetchOpenPRs() }
+                    if tab == "tasks" {
+                        if AppConfig.current.linear != nil { store.fetchLinearIssues() }
+                        else { store.fetchJiraTickets() }
+                    }
                 }
             }
 
@@ -131,6 +138,9 @@ struct PanelView: View {
         }
         if !store.jiraApiToken.isEmpty, store.jiraNeedsRefresh, !store.jiraFetching {
             store.fetchJiraTickets()
+        }
+        if !store.linearApiKey.isEmpty, store.linearNeedsRefresh, !store.linearFetching {
+            store.fetchLinearIssues()
         }
     }
 

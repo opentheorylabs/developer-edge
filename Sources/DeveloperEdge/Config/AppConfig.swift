@@ -22,6 +22,7 @@ struct AppConfig: Codable {
     var branding: Branding
     var github: GitHub
     var jira: Jira?
+    var linear: Linear?
     var workspace: Workspace
     var environments: [Environment]
     var services: [Service]
@@ -101,6 +102,10 @@ struct AppConfig: Codable {
         var jql: String?                    // optional override for the ticket query
     }
 
+    struct Linear: Codable {
+        var teamId: String?                 // filter to a specific team slug; nil = all teams
+    }
+
     struct Workspace: Codable {
         /// Default root; "~" is expanded. Empty = prompt on first run.
         var defaultRoot: String
@@ -174,6 +179,7 @@ extension AppConfig {
         branding      = try c.decodeIfPresent(Branding.self,        forKey: .branding)      ?? Branding()
         github        = try c.decode(GitHub.self,                   forKey: .github)
         jira          = try c.decodeIfPresent(Jira.self,            forKey: .jira)
+        linear        = try c.decodeIfPresent(Linear.self,          forKey: .linear)
         workspace     = try c.decodeIfPresent(Workspace.self,       forKey: .workspace)     ?? Workspace()
         environments  = try c.decodeIfPresent([Environment].self,   forKey: .environments)  ?? []
         services      = try c.decodeIfPresent([Service].self,       forKey: .services)      ?? []
