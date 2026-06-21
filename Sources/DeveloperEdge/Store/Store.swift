@@ -124,6 +124,14 @@ final class Store: ObservableObject {
     @Published var currentBranch: String = ""
     @Published var currentBranchTicketId: String? = nil
 
+    // MARK: - AI
+    @Published var aiServerStatus: AIServerStatus = .unknown
+    @Published var aiServerModel: String?
+    @Published var aiServerLatency: Double?
+    @Published var aiServerChecking = false
+    @Published var contextCopied = false
+    @Published var prPromptCopied = false
+
     // MARK: - Session (bumped each time the popover opens)
     @Published var popoverSession = UUID()
 

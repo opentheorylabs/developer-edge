@@ -23,6 +23,8 @@ enum PipelineStatus { case unknown, running, success, failure }
 
 enum GraphToolState { case unknown, notInstalled, installed }
 
+enum AIServerStatus { case unknown, checking, online, offline }
+
 // MARK: - Service
 
 struct ZService: Identifiable {

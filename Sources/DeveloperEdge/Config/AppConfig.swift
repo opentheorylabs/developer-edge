@@ -23,6 +23,7 @@ struct AppConfig: Codable {
     var github: GitHub
     var jira: Jira?
     var linear: Linear?
+    var ai: AI?
     var workspace: Workspace
     var environments: [Environment]
     var services: [Service]
@@ -166,6 +167,17 @@ struct AppConfig: Codable {
         var mandatory: Bool
     }
 
+    struct AI: Codable {
+        var server: AIServer?
+
+        init(server: AIServer? = nil) { self.server = server }
+
+        struct AIServer: Codable {
+            var url: String         // e.g. "http://nvidia-dgx-spark:8000"
+            var label: String?      // display name shown in panel
+        }
+    }
+
 }
 
 // MARK: - Decoding with defaults
@@ -180,6 +192,7 @@ extension AppConfig {
         github        = try c.decode(GitHub.self,                   forKey: .github)
         jira          = try c.decodeIfPresent(Jira.self,            forKey: .jira)
         linear        = try c.decodeIfPresent(Linear.self,          forKey: .linear)
+        ai            = try c.decodeIfPresent(AI.self,              forKey: .ai)
         workspace     = try c.decodeIfPresent(Workspace.self,       forKey: .workspace)     ?? Workspace()
         environments  = try c.decodeIfPresent([Environment].self,   forKey: .environments)  ?? []
         services      = try c.decodeIfPresent([Service].self,       forKey: .services)      ?? []
@@ -234,6 +247,7 @@ extension AppConfig {
         branding: Branding(),
         github: GitHub(org: ""),
         jira: nil,
+        ai: nil,
         workspace: Workspace(),
         environments: [
             Environment(id: "dev",     label: "Dev",     branch: "development", grafanaURL: nil),

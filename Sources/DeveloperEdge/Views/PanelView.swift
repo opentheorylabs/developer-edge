@@ -9,10 +9,11 @@ struct TabBar: View {
     private var tabs: [(id: String, label: String, color: Color, icon: TabIcon)] {
         let taskIcon: TabIcon = AppConfig.current.linear != nil ? .brand(.linear) : .brand(.jira)
         return [
-            ("dev",   "Development", Theme.green,  .sf("hammer.fill")),
-            ("prs",   "GitHub",      Theme.blue,   .brand(.github)),
-            ("tasks", "Tasks",       Theme.orange, taskIcon),
-            ("envs",  "Services",    Theme.purple, .sf("square.stack.3d.up.fill")),
+            ("dev",   "Dev",      Theme.green,  .sf("hammer.fill")),
+            ("prs",   "GitHub",   Theme.blue,   .brand(.github)),
+            ("tasks", "Tasks",    Theme.orange, taskIcon),
+            ("envs",  "Services", Theme.purple, .sf("square.stack.3d.up.fill")),
+            ("ai",    "AI",       Color(hex: "#7C3AED"), .sf("sparkles")),
         ]
     }
 
@@ -90,6 +91,7 @@ struct PanelView: View {
                     case "dev":   DevelopmentPanel(store: store)
                     case "prs":   PRListPanel(store: store, onOpenSettings: { showSettings = true })
                     case "tasks": QuickActionsPanel(store: store, onOpenSettings: { showSettings = true })
+                    case "ai":    AIPanel(store: store)
                     default:      EnvironmentsPanel(store: store)
                     }
                 }
@@ -99,6 +101,9 @@ struct PanelView: View {
                     if tab == "tasks" {
                         if AppConfig.current.linear != nil { store.fetchLinearIssues() }
                         else { store.fetchJiraTickets() }
+                    }
+                    if tab == "ai", AppConfig.current.ai?.server != nil {
+                        store.checkAIServer()
                     }
                 }
             }
