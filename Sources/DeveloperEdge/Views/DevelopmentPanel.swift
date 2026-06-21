@@ -143,12 +143,14 @@ struct DevelopmentPanel: View {
                     alert: store.isFetchStale && store.fetchExitCode == nil,
                     action: { store.runGitFetchAll() }
                 )
-                ActionGridButton(
-                    icon: "square.3.layers.3d", color: Theme.purple,
-                    title: "Open Lens", subtitle: "Kubeconfig + Lens",
-                    running: store.lensRunning,
-                    action: { store.openLens() }
-                )
+                if !AppConfig.current.clusters.isEmpty {
+                    ActionGridButton(
+                        icon: "square.3.layers.3d", color: Theme.purple,
+                        title: "Open Lens", subtitle: "Kubeconfig + Lens",
+                        running: store.lensRunning,
+                        action: { store.openLens() }
+                    )
+                }
                 ActionGridButton(
                     icon: setupIcon, color: Theme.purple,
                     title: setupTitle,

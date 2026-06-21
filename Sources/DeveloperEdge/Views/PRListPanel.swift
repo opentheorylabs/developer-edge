@@ -20,16 +20,24 @@ struct PRListPanel: View {
     }
 
     private var githubActions: some View {
-        VStack(spacing: 8) {
+        let org = AppConfig.current.github.org
+        return VStack(spacing: 8) {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 GridButton(data: GridButtonData(
                     icon: "eye", color: Theme.blue,
                     title: "Review Requests", subtitle: "Waiting on you",
                     url: "https://github.com/pulls?q=is%3Apr+is%3Aopen+review-requested%3A%40me"))
-                GridButton(data: GridButtonData(
-                    icon: "building.columns", color: Theme.blue,
-                    title: "Org Repos", subtitle: AppConfig.current.github.org,
-                    url: "https://github.com/orgs/\(AppConfig.current.github.org)/repositories"))
+                if !org.isEmpty {
+                    GridButton(data: GridButtonData(
+                        icon: "building.columns", color: Theme.blue,
+                        title: "Org Repos", subtitle: org,
+                        url: "https://github.com/orgs/\(org)/repositories"))
+                } else {
+                    GridButton(data: GridButtonData(
+                        icon: "person.crop.circle", color: Theme.blue,
+                        title: "Your PRs", subtitle: "All open PRs",
+                        url: "https://github.com/pulls"))
+                }
             }
         }
         .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 4)

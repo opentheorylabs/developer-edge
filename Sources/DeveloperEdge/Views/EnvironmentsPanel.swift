@@ -19,22 +19,30 @@ struct EnvironmentsPanel: View {
         VStack(spacing: 0) {
             envSwitcher
             Rectangle().fill(Theme.divider).frame(height: 1)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    sectionHeader("Quick Actions")
-                    envQuickActions(env: activeEnv)
-                        .padding(.horizontal, 14).padding(.bottom, 4)
+            if store.services.isEmpty {
+                emptyServicesView
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        sectionHeader("Quick Actions")
+                        envQuickActions(env: activeEnv)
+                            .padding(.horizontal, 14).padding(.bottom, 4)
 
-                    sectionHeader("Frontends")
-                    tableColumnHeader
-                    rows(frontends, env: activeEnv)
+                        if !frontends.isEmpty {
+                            sectionHeader("Frontends")
+                            tableColumnHeader
+                            rows(frontends, env: activeEnv)
+                        }
 
-                    sectionHeader("APIs")
-                    tableColumnHeader
-                    rows(apis, env: activeEnv)
+                        if !apis.isEmpty {
+                            sectionHeader("APIs")
+                            tableColumnHeader
+                            rows(apis, env: activeEnv)
+                        }
+                    }
+                    .padding(.top, 2)
+                    .padding(.bottom, 6)
                 }
-                .padding(.top, 2)
-                .padding(.bottom, 6)
             }
         }
         .onAppear { store.fetchPipelineStatuses(env: activeEnv) }
@@ -67,6 +75,16 @@ struct EnvironmentsPanel: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
+    }
+
+    // MARK: - Empty state
+
+    private var emptyServicesView: some View {
+        EmptyStateView(
+            icon: "square.stack.3d.up",
+            title: "No services configured",
+            subtitle: "Add a \u{201C}services\u{201D} array to your config file to see health checks and CI status here."
+        )
     }
 
     // MARK: - Helpers
