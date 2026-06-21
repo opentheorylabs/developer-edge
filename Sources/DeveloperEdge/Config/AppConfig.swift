@@ -114,7 +114,7 @@ struct AppConfig: Codable {
         var aiInstructionsRepo: String?
 
         init(defaultRoot: String = "~/Developer",
-             subfolders: [String] = ["Frontend", "Backend", "Mobile", "DevOps"],
+             subfolders: [String] = [],
              aiInstructionsRepo: String? = nil) {
             self.defaultRoot = defaultRoot
             self.subfolders = subfolders

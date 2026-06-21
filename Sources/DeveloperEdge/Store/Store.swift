@@ -112,10 +112,12 @@ final class Store: ObservableObject {
     /// The workspace is considered set up if the cloned structure exists on disk
     /// (checked synchronously so the Setup button never flashes before the async scan).
     var isWorkspaceSetUp: Bool {
-        let fm = FileManager.default
-        return fm.fileExists(atPath: workspaceRoot + "/Frontend")
-            || fm.fileExists(atPath: workspaceRoot + "/Backend")
-            || !repos.isEmpty
+        if !repos.isEmpty { return true }
+        guard !workspaceRoot.isEmpty else { return false }
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: workspaceRoot, isDirectory: &isDir), isDir.boolValue else { return false }
+        let entries = (try? FileManager.default.contentsOfDirectory(atPath: workspaceRoot)) ?? []
+        return entries.contains { FileManager.default.fileExists(atPath: workspaceRoot + "/" + $0 + "/.git") }
     }
 
     // MARK: - Current branch

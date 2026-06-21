@@ -178,7 +178,7 @@ struct OnboardingView: View {
 
     private var workspaceStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            stepHeader("📦", "Set up your workspace", "Clones every repo you can access into Frontend / Backend / Mobile / DevOps.")
+            stepHeader("📦", "Set up your workspace", "Clones every repo you can access into your workspace folder.")
             if store.isWorkspaceSetUp && store.setupExitCode == nil && !store.setupRunning {
                 statusLine("Workspace already set up", ok: true)
             }
