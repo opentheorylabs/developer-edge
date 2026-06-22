@@ -193,3 +193,29 @@ let allTerminals: [TerminalApp] = [
 ]
 
 var defaultWorkspaceRoot: String { AppConfig.current.workspace.expandedRoot }
+
+// MARK: - Onboarding
+
+struct OnboardingOrg: Identifiable {
+    let id: Int
+    let login: String
+    let isUser: Bool            // true = personal account, false = org
+}
+
+struct OnboardingRepo: Identifiable {
+    let id: Int
+    let fullName: String        // "org/repo"
+    let name: String
+    let description: String?
+    let isPrivate: Bool
+    let sshUrl: String
+    let httpsUrl: String
+    var alreadyCloned: Bool
+}
+
+struct OnboardingCloneState {
+    var total: Int
+    var completed: Int
+    var log: [(repo: String, success: Bool)]
+    var finished: Bool
+}

@@ -132,6 +132,13 @@ final class Store: ObservableObject {
     @Published var contextCopied = false
     @Published var prPromptCopied = false
 
+    // MARK: - Onboarding
+    @Published var onboardingOrgs: [OnboardingOrg] = []
+    @Published var orgsFetching = false
+    @Published var orgRepos: [String: [OnboardingRepo]] = [:]
+    @Published var orgReposFetching: Set<String> = []
+    @Published var onboardingClone: OnboardingCloneState? = nil
+
     // MARK: - Session (bumped each time the popover opens)
     @Published var popoverSession = UUID()
 
